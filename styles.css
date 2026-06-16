@@ -3,7 +3,7 @@
    ============================================================ */
 
 :root {
-  --bg-base: #0b1020;
+  --bg-base: #050506;
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-bg-strong: rgba(255, 255, 255, 0.14);
   --glass-border: rgba(255, 255, 255, 0.18);
@@ -49,9 +49,9 @@ body {
   z-index: -1;
   overflow: hidden;
   background:
-    radial-gradient(1200px 800px at 80% -10%, #2a1c5e 0%, transparent 55%),
-    radial-gradient(1000px 900px at -10% 110%, #0c3a52 0%, transparent 55%),
-    linear-gradient(160deg, #0b1020 0%, #0e1230 55%, #0a0f24 100%);
+    radial-gradient(1200px 800px at 80% -10%, #161020 0%, transparent 55%),
+    radial-gradient(1000px 900px at -10% 110%, #0a1418 0%, transparent 55%),
+    linear-gradient(160deg, #050506 0%, #0a0a0c 55%, #030304 100%);
 }
 
 /* Blobs are static: animating blurred shapes *behind* backdrop-filter cards
@@ -60,13 +60,13 @@ body {
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.55;
+  filter: blur(80px);
+  opacity: 0.2;
 }
 .blob-1 { width: 460px; height: 460px; background: #6c4bff; top: -120px; left: -80px; }
-.blob-2 { width: 520px; height: 520px; background: #14c8ff; bottom: -160px; right: -120px; }
-.blob-3 { width: 360px; height: 360px; background: #ff5ca8; top: 40%; left: 55%; opacity: 0.32; }
-.blob-4 { width: 300px; height: 300px; background: #2ee6a6; top: 15%; right: 18%; opacity: 0.25; }
+.blob-2 { width: 520px; height: 520px; background: #14c8ff; bottom: -160px; right: -120px; opacity: 0.16; }
+.blob-3 { width: 360px; height: 360px; background: #ff5ca8; top: 40%; left: 55%; opacity: 0.12; }
+.blob-4 { width: 300px; height: 300px; background: #2ee6a6; top: 15%; right: 18%; opacity: 0.1; }
 
 /* ---------- Floating winged money (Liquid Glass theme only) ----------
    Sits at z-index -1 (behind in-flow content, in front of .bg), so the
