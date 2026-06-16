@@ -304,8 +304,6 @@ function catHint(id) { const k = id + "_hint"; return L().cat[k] || I18N.en.cat[
 
 // ---- Elements ----
 const el = {
-  toggle: document.querySelector(".toggle"),
-  toggleBtns: document.querySelectorAll(".toggle-btn"),
   currencySymbol: document.getElementById("currencySymbol"),
   expenses: document.getElementById("expenses"),
   realMode: document.getElementById("realMode"),
@@ -743,26 +741,22 @@ function applyTheme(theme) {
   try { localStorage.setItem("numbr_theme", theme); } catch (e) {}
 }
 function updateSettingsActive() {
+  document.querySelectorAll(".opt-cur").forEach((b) => b.classList.toggle("is-active", b.dataset.currency === state.currency));
   document.querySelectorAll(".opt-lang").forEach((b) => b.classList.toggle("is-active", b.dataset.lang === state.lang));
   document.querySelectorAll(".opt-theme").forEach((b) => b.classList.toggle("is-active", b.dataset.themePick === state.theme));
 }
 
+function setCurrency(cur) {
+  if (cur === state.currency || !CURRENCY_META[cur]) return;
+  state.currency = cur;
+  el.inflation.value = formatRate(state.inflation[cur], false);
+  buildLayout(); refresh(); refreshSavings();
+  updateSettingsActive();
+  try { localStorage.setItem("numbr_currency", cur); } catch (e) {}
+}
+
 // ---- Event wiring ----
-el.toggleBtns.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const cur = btn.dataset.currency;
-    if (cur === state.currency) return;
-    state.currency = cur;
-    el.toggleBtns.forEach((b) => {
-      const active = b.dataset.currency === cur;
-      b.classList.toggle("is-active", active);
-      b.setAttribute("aria-selected", active ? "true" : "false");
-    });
-    el.toggle.classList.toggle("tl", cur === "TL");
-    el.inflation.value = formatRate(state.inflation[cur], false);
-    buildLayout(); refresh(); refreshSavings();
-  });
-});
+document.querySelectorAll("[data-currency]").forEach((b) => b.addEventListener("click", () => setCurrency(b.dataset.currency)));
 
 el.addCat.addEventListener("click", addCustomCategory);
 el.investSelect.addEventListener("change", () => { state.savings.invest[state.currency] = el.investSelect.value; refreshSavings(); });
@@ -809,11 +803,13 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
 try {
   const savedLang = localStorage.getItem("numbr_lang");
   const savedTheme = localStorage.getItem("numbr_theme");
+  const savedCur = localStorage.getItem("numbr_currency");
   if (savedLang && I18N[savedLang]) state.lang = savedLang;
   if (savedTheme) state.theme = savedTheme;
+  if (savedCur && CURRENCY_META[savedCur]) state.currency = savedCur;
 } catch (e) {}
 
 el.expenses.value = formatThousands(state.monthlyExpenses);
-el.inflation.value = formatRate(state.inflation.USD, false);
+el.inflation.value = formatRate(state.inflation[state.currency], false);
 applyTheme(state.theme);
 applyLanguage(state.lang); // builds layout + savings, applies all translations

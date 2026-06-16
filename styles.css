@@ -727,7 +727,7 @@ body {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 2px var(--accent);
 }
-.opt-lang { flex: 1; min-width: 110px; justify-content: center; font-size: 17px; font-weight: 600; }
+.opt-lang, .opt-cur { flex: 1; min-width: 110px; justify-content: center; font-size: 17px; font-weight: 600; }
 .opt-theme .opt-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
 .opt-theme .opt-name { font-size: 16px; font-weight: 700; }
 .opt-theme .opt-desc { font-size: 12.5px; color: var(--text-dim); }

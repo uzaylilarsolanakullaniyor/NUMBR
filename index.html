@@ -23,7 +23,6 @@
     <!-- Branding -->
     <header class="brand">
       <div class="logo">
-        <span class="logo-mark">N</span>
         <h1 class="logo-word">Numbr</h1>
         <span class="logo-emoji" aria-hidden="true">💸</span>
       </div>
@@ -35,20 +34,6 @@
     <!-- Controls -->
     <section class="glass controls" aria-label="Inputs">
       <div class="control-row">
-        <!-- Currency toggle -->
-        <div class="field">
-          <label class="field-label" data-i18n="currency">Currency</label>
-          <div class="toggle" role="tablist" aria-label="Currency selector">
-            <button class="toggle-btn is-active" data-currency="USD" role="tab" aria-selected="true">
-              <span class="flag">🇺🇸</span> USD
-            </button>
-            <button class="toggle-btn" data-currency="TL" role="tab" aria-selected="false">
-              <span class="flag">🇹🇷</span> TL
-            </button>
-            <span class="toggle-pill" aria-hidden="true"></span>
-          </div>
-        </div>
-
         <!-- Monthly expenses -->
         <div class="field field-grow">
           <label class="field-label" for="expenses" data-i18n="monthly_expenses">Monthly expenses</label>
@@ -192,6 +177,14 @@
       <div class="view-intro">
         <h2 class="view-title" data-i18n="settings_title">Settings</h2>
       </div>
+
+      <section class="glass settings-group">
+        <h3 class="settings-label" data-i18n="currency">Currency</h3>
+        <div class="settings-options settings-options--lang">
+          <button class="opt opt-cur" type="button" data-currency="USD"><span class="opt-name">🇺🇸 USD</span></button>
+          <button class="opt opt-cur" type="button" data-currency="TL"><span class="opt-name">🇹🇷 TL</span></button>
+        </div>
+      </section>
 
       <section class="glass settings-group">
         <h3 class="settings-label" data-i18n="language">Language</h3>
