@@ -792,6 +792,7 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
     document.getElementById("view-home").hidden = name !== "home";
     document.getElementById("view-savings").hidden = name !== "savings";
     document.getElementById("view-settings").hidden = name !== "settings";
+    document.querySelector(".brand").hidden = name !== "home"; // logo only on Home
     if (name === "savings") refreshSavings();
     window.scrollTo({ top: 0, behavior: "auto" });
   }
