@@ -30,7 +30,7 @@ const CURRENCY_META = {
   TL:  { symbol: "₺", code: "TRY", locale: "tr-TR", inflation: 40, rentHint: "30,000", valueHint: "5,000,000" },
 };
 
-const SAVINGS_CATEGORIES = ["cigarettes","alcohol","subscriptions","eatingout","delivery","coffee","gaming","betting","gym","ridehailing","shopping"];
+const SAVINGS_CATEGORIES = ["cigarettes","alcohol","subscriptions","eatingout","delivery","coffee","gaming","fuel","shopping"];
 const SAVINGS_DEFAULT_INVEST = { USD: "sp500", TL: "deposit" };
 
 // ============================================================
@@ -105,8 +105,7 @@ const I18N = {
       cigarettes: "Cigarettes", alcohol: "Alcohol", subscriptions: "Digital subscriptions",
       subscriptions_hint: "Netflix, Spotify, YouTube Premium, etc.",
       eatingout: "Eating out / restaurants", delivery: "Food delivery", coffee: "Daily coffee",
-      gaming: "Gaming subs + in-game purchases", betting: "Betting / lottery / games of chance",
-      gym: "Unused gym membership", ridehailing: "Ride-hailing (taxi / Uber / Lyft)",
+      gaming: "Gaming subs + in-game purchases", fuel: "Fuel / gas",
       shopping: "Impulse / fast-fashion shopping",
     },
   },
@@ -179,8 +178,7 @@ const I18N = {
       cigarettes: "Sigara", alcohol: "Alkol", subscriptions: "Dijital abonelikler",
       subscriptions_hint: "Netflix, Spotify, YouTube Premium vb.",
       eatingout: "Dışarıda yemek / restoran", delivery: "Yemek siparişi", coffee: "Günlük kahve",
-      gaming: "Oyun abonelikleri + oyun içi harcama", betting: "Bahis / loto / şans oyunları",
-      gym: "Kullanılmayan spor salonu üyeliği", ridehailing: "Çağrı ile ulaşım (taksi / Uber / Lyft)",
+      gaming: "Oyun abonelikleri + oyun içi harcama", fuel: "Yakıt harcamaları",
       shopping: "Dürtüsel / hızlı moda alışveriş",
     },
   },
@@ -253,8 +251,7 @@ const I18N = {
       cigarettes: "香烟", alcohol: "酒", subscriptions: "数字订阅",
       subscriptions_hint: "Netflix、Spotify、YouTube Premium 等",
       eatingout: "外出就餐 / 餐厅", delivery: "外卖", coffee: "每日咖啡",
-      gaming: "游戏订阅 + 游戏内购买", betting: "博彩 / 彩票 / 机会游戏",
-      gym: "闲置的健身房会员", ridehailing: "网约车（出租车 / Uber / Lyft）",
+      gaming: "游戏订阅 + 游戏内购买", fuel: "燃油 / 加油",
       shopping: "冲动 / 快时尚购物",
     },
   },
@@ -394,7 +391,7 @@ function buildLayout() {
     row.className = "bar-row";
     row.dataset.bar = inst.id;
     row.innerHTML = `
-      <div class="bar-name">${instName(inst.id)}<small data-barbest hidden> ${t("bar_easiest")}</small></div>
+      <div class="bar-name">${instName(inst.id)}</div>
       <div class="bar-track">
         <div class="bar-fill" style="--bar-color:${inst.color}"></div>
         <span class="bar-value"></span>
