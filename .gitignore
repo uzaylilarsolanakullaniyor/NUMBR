@@ -4,3 +4,6 @@
 # Local-only tooling (Mac paths, preview server)
 .claude/
 server.py
+
+# Dependencies
+node_modules/
