@@ -741,6 +741,8 @@ body {
 .theme-swatch--glass { background: linear-gradient(135deg, #7c5cff, #21d4fd); }
 .theme-swatch--xp { background: linear-gradient(180deg, #3a6ea5 0%, #7cb0e0 48%, #8ec64f 52%, #5ba32f 100%); }
 .theme-swatch--medieval { background: linear-gradient(135deg, #2a1d10 0%, #b8893a 55%, #e8dcc0 100%); }
+.theme-swatch--doge { background: linear-gradient(135deg, #e3c79a 0%, #f5b400 38%, #e84d8a 68%, #3aa0ff 100%); }
+.theme-swatch--vaporwave { background: linear-gradient(135deg, #2bf0ff 0%, #c34dff 50%, #ff3ca0 100%); }
 
 /* ============================================================
    THEME: Windows XP (Luna)
@@ -897,3 +899,132 @@ body {
 }
 [data-theme="medieval"] .tab.is-active svg { filter: none; }
 [data-theme="medieval"] .toast { background: #2a1d10; color: #f3e3c4; border: 1px solid #6b4f2a; }
+
+/* ============================================================
+   THEME: Doge (much meme, very finance)
+   ============================================================ */
+[data-theme="doge"] {
+  --text: #3a2e16; --text-dim: #6a5a36; --text-faint: #9a8a5a;
+  --accent: #e84d8a; --accent-2: #3aa0ff; --good: #4caf3a; --warn: #f5a000;
+  --glass-bg: #fffdf3; --glass-bg-strong: #ffffff; --glass-border: #e8b04d; --glass-border-soft: #ead9a8;
+  --shadow: 0 8px 22px rgba(120, 90, 20, 0.25);
+  --radius-lg: 20px; --radius-md: 16px; --radius-sm: 12px;
+}
+[data-theme="doge"] body { font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", "Marker Felt", cursive; color: var(--text); }
+[data-theme="doge"] h1, [data-theme="doge"] h2, [data-theme="doge"] h3, [data-theme="doge"] .card-title { font-family: "Comic Sans MS", "Comic Sans", cursive; }
+[data-theme="doge"] .bg {
+  background: radial-gradient(1200px 800px at 70% 8%, #f5e7c4 0%, transparent 60%), linear-gradient(135deg, #efe0bd 0%, #e4c98f 100%);
+}
+[data-theme="doge"] .blob {
+  display: block; width: auto; height: auto; border-radius: 0; background: none; filter: none; opacity: 0.9;
+  font-family: "Comic Sans MS", "Comic Sans", cursive; font-weight: 700; font-size: 30px; white-space: nowrap; animation: none;
+}
+[data-theme="doge"] .blob-1 { top: 13%; left: 5%; }
+[data-theme="doge"] .blob-1::before { content: "wow"; color: #e84d8a; display: inline-block; transform: rotate(-8deg); }
+[data-theme="doge"] .blob-2 { top: auto; bottom: 16%; right: 6%; left: auto; }
+[data-theme="doge"] .blob-2::before { content: "much money"; color: #3aa0ff; display: inline-block; transform: rotate(6deg); }
+[data-theme="doge"] .blob-3 { top: 40%; left: 70%; }
+[data-theme="doge"] .blob-3::before { content: "very rich"; color: #4caf3a; display: inline-block; transform: rotate(-5deg); }
+[data-theme="doge"] .blob-4 { top: 66%; left: 8%; }
+[data-theme="doge"] .blob-4::before { content: "such freedom"; color: #f5a000; display: inline-block; transform: rotate(7deg); }
+[data-theme="doge"] .glass {
+  background: #fffdf3; border: 3px solid #f3b94d; border-radius: 20px;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: 0 7px 0 rgba(232, 176, 77, 0.4), 0 12px 24px rgba(120, 90, 20, 0.18); color: var(--text);
+}
+[data-theme="doge"] .card {
+  background: #fffdf3; border: 3px solid var(--card-color, #f3b94d); border-radius: 18px;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--card-color, #f3b94d) 35%, transparent);
+}
+[data-theme="doge"] .card-accent { display: none; }
+[data-theme="doge"] .logo-word, [data-theme="doge"] .view-title {
+  background: linear-gradient(90deg, #e84d8a, #f5a000, #4caf3a, #3aa0ff, #c34dff);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+}
+[data-theme="doge"] .headline { background: #fffdf3 !important; }
+[data-theme="doge"] .headline-tag { color: #e84d8a; }
+[data-theme="doge"] .headline-amount, [data-theme="doge"] .savings-total-value,
+[data-theme="doge"] .card-amount-value, [data-theme="doge"] .proj-val, [data-theme="doge"] .rule-number-value {
+  -webkit-text-fill-color: initial; color: #e84d8a;
+}
+[data-theme="doge"] .section-head h2 { color: #6a4a8a; }
+[data-theme="doge"] .section-head p, [data-theme="doge"] .subtagline { color: #7a5a2a; }
+[data-theme="doge"] .money-input, [data-theme="doge"] .rate-input, [data-theme="doge"] .proj-card,
+[data-theme="doge"] .re-calc, [data-theme="doge"] .opt {
+  background: #fff; border: 2px solid #ead9a8; border-radius: 14px;
+}
+[data-theme="doge"] .rule-link, [data-theme="doge"] .add-cat, [data-theme="doge"] .invest-pick select {
+  background: #ffe066; border: 2px solid #e8b04d; border-radius: 14px; color: #3a2e16;
+  box-shadow: 0 4px 0 rgba(232, 176, 77, 0.5); -webkit-text-fill-color: initial;
+}
+[data-theme="doge"] .toggle-pill { background: linear-gradient(135deg, #e84d8a, #3aa0ff); box-shadow: none; }
+[data-theme="doge"] .tabbar {
+  background: #fffdf3; border: 3px solid #f3b94d; border-radius: 22px;
+  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 8px 22px rgba(120, 90, 20, 0.3);
+}
+[data-theme="doge"] .tab { color: #9a7a3a; }
+[data-theme="doge"] .tab.is-active { color: #fff; background: linear-gradient(135deg, #e84d8a, #f5a000); border-radius: 16px; }
+[data-theme="doge"] .tab.is-active svg { filter: none; }
+[data-theme="doge"] .toast { background: #fffdf3; color: #3a2e16; border: 2px solid #f3b94d; }
+
+/* ============================================================
+   THEME: Vaporwave (A E S T H E T I C)
+   ============================================================ */
+[data-theme="vaporwave"] {
+  --text: #f3e9ff; --text-dim: #cdb8e8; --text-faint: #9a86c0;
+  --accent: #ff3ca0; --accent-2: #2bf0ff; --good: #2bffb0; --warn: #ffd166;
+  --glass-bg: rgba(40, 16, 66, 0.55); --glass-bg-strong: rgba(50, 20, 80, 0.7);
+  --glass-border: rgba(255, 60, 214, 0.5); --glass-border-soft: rgba(43, 240, 255, 0.28);
+  --shadow: 0 0 28px rgba(255, 60, 214, 0.35);
+}
+[data-theme="vaporwave"] body { color: var(--text); }
+[data-theme="vaporwave"] .bg {
+  background: linear-gradient(180deg, #1a0b2e 0%, #46115f 26%, #8a1f7a 42%, #ff5fa2 51%, #2a0f45 54%, #160826 100%);
+}
+[data-theme="vaporwave"] .blob-3, [data-theme="vaporwave"] .blob-4 { display: none; }
+[data-theme="vaporwave"] .blob-1 {
+  display: block; width: 300px; height: 300px; left: 50%; top: 7%; transform: translateX(-50%);
+  background: linear-gradient(180deg, #ffe07a 0%, #ff77d4 55%, #c34dff 100%);
+  border-radius: 50%; filter: none; opacity: 0.92; animation: none;
+  box-shadow: 0 0 80px rgba(255, 119, 212, 0.6);
+}
+[data-theme="vaporwave"] .blob-2 {
+  display: block; width: 300%; height: 60%; left: -100%; bottom: -2%; top: auto; right: auto;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 56px, rgba(43, 240, 255, 0.6) 56px 58px),
+    repeating-linear-gradient(0deg, transparent 0 56px, rgba(43, 240, 255, 0.6) 56px 58px);
+  transform: perspective(280px) rotateX(74deg); transform-origin: bottom center;
+  filter: none; opacity: 0.4; border-radius: 0; animation: none;
+}
+[data-theme="vaporwave"] .glass, [data-theme="vaporwave"] .card {
+  background: rgba(36, 14, 58, 0.55);
+  border: 1px solid rgba(255, 60, 214, 0.55);
+  box-shadow: 0 0 22px rgba(255, 60, 214, 0.28), inset 0 0 0 1px rgba(43, 240, 255, 0.2);
+  color: var(--text);
+}
+[data-theme="vaporwave"] .card-accent { background: linear-gradient(90deg, #2bf0ff, #ff3ca0); opacity: 1; }
+[data-theme="vaporwave"] .logo-word, [data-theme="vaporwave"] .view-title {
+  -webkit-text-fill-color: initial; background: none; color: #fff;
+  text-shadow: 0 0 10px #ff3ca0, 0 0 22px #2bf0ff; letter-spacing: 0.06em;
+}
+[data-theme="vaporwave"] .headline { background: linear-gradient(135deg, rgba(255, 60, 214, 0.18), rgba(43, 240, 255, 0.12)) !important; }
+[data-theme="vaporwave"] .headline-tag { color: #2bf0ff; text-shadow: 0 0 8px rgba(43, 240, 255, 0.6); }
+[data-theme="vaporwave"] .headline-amount { color: #fff; text-shadow: 0 0 14px #ff3ca0; -webkit-text-fill-color: initial; }
+[data-theme="vaporwave"] .section-head h2 { color: #ff8fde; }
+[data-theme="vaporwave"] .money-input, [data-theme="vaporwave"] .rate-input, [data-theme="vaporwave"] .proj-card,
+[data-theme="vaporwave"] .re-calc, [data-theme="vaporwave"] .opt, [data-theme="vaporwave"] .invest-pick select {
+  background: rgba(20, 8, 40, 0.55); border: 1px solid rgba(43, 240, 255, 0.4);
+}
+[data-theme="vaporwave"] .rule-link, [data-theme="vaporwave"] .add-cat {
+  background: linear-gradient(135deg, #ff3ca0, #c34dff); border: 1px solid #2bf0ff; color: #fff;
+  box-shadow: 0 0 16px rgba(255, 60, 214, 0.5);
+}
+[data-theme="vaporwave"] .toggle-pill { background: linear-gradient(135deg, #ff3ca0, #2bf0ff); box-shadow: 0 0 12px rgba(255, 60, 214, 0.5); }
+[data-theme="vaporwave"] .tabbar {
+  background: rgba(26, 11, 46, 0.75); border: 1px solid rgba(255, 60, 214, 0.5);
+  box-shadow: 0 0 26px rgba(255, 60, 214, 0.35), inset 0 0 0 1px rgba(43, 240, 255, 0.2);
+}
+[data-theme="vaporwave"] .tab { color: #cdb8e8; }
+[data-theme="vaporwave"] .tab.is-active { color: #fff; background: linear-gradient(135deg, rgba(255, 60, 214, 0.4), rgba(43, 240, 255, 0.3)); box-shadow: 0 0 14px rgba(255, 60, 214, 0.5); }
+[data-theme="vaporwave"] .toast { background: rgba(26, 11, 46, 0.92); color: #fff; border: 1px solid #ff3ca0; }
