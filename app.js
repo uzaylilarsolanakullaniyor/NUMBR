@@ -598,7 +598,6 @@ function updateBar(row, r, best, max) {
   const isBest = best && inst.id === best.inst.id;
   const fill = row.querySelector(".bar-fill");
   const val = row.querySelector(".bar-value");
-  row.querySelector("[data-barbest]").hidden = !isBest;
   if (unreachable) { fill.classList.add("unreachable"); fill.style.width = "100%"; val.textContent = t("out_of_reach"); }
   else { fill.classList.remove("unreachable"); fill.style.width = (max === 0 ? 0 : Math.max(4, (required / max) * 100)) + "%"; val.textContent = formatMoney(required, { compact: true }); }
 }
