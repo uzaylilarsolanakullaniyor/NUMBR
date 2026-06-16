@@ -32,6 +32,14 @@ const CURRENCY_META = {
 
 const SAVINGS_CATEGORIES = ["cigarettes","alcohol","subscriptions","eatingout","delivery","coffee","gaming","fuel","shopping"];
 const SAVINGS_DEFAULT_INVEST = { USD: "sp500", TL: "deposit" };
+// Income sources, pre-classified as passive (counts toward freedom) or active.
+const INCOME_CATEGORIES = [
+  { id: "salary", passive: false },
+  { id: "rental", passive: true },
+  { id: "interest", passive: true },
+  { id: "dividends", passive: true },
+  { id: "side", passive: false },
+];
 
 // ============================================================
 //  i18n dictionary
@@ -92,6 +100,15 @@ const I18N = {
     freedom_reached: "🎉 You've reached your freedom number. Your investments can cover your expenses!",
     portfolio_empty: "Add your holdings above to see your progress.",
     portfolio_note: "Freedom target = yearly expenses ÷ chosen return. Passive income = value × return. Estimates, not advice.",
+    nav_income: "Income",
+    income_title: "Your income", income_sub: "Add your monthly income. Mark the passive ones (rent, interest, dividends); only passive income counts toward freedom.",
+    add_income: "+ Add income", income_ph: "Income source", total_income: "Total monthly income",
+    passive_label: "Passive", active_label: "Active", covered_by_passive: "covered by passive income",
+    surplus_line: "You have about {x}/month left to invest.", deficit_line: "You spend about {x}/month more than you earn.",
+    income_free: "🎉 Financially free: your passive income already covers your expenses!",
+    income_empty: "Add your income above to see where you stand.",
+    income_note: "Passive income = rent, interest, dividends, and similar. Financial freedom = passive income ≥ your expenses.",
+    inc: { salary: "Salary", rental: "Rental income", interest: "Interest income", dividends: "Dividends", side: "Side / freelance income" },
     note_historical: "Based on historical averages, not a guarantee.",
     note_btc_warn: "Bitcoin is highly volatile; this figure is speculative.",
     note_btc_tl: "Trailing ~12-month return in lira terms (≈ +37%, as of mid-2026, source: CoinGecko). Bitcoin is extremely volatile, a single year is not a forecast.",
@@ -173,6 +190,15 @@ const I18N = {
     freedom_reached: "🎉 Özgürlük rakamına ulaştın. Yatırımların giderlerini karşılayabilir!",
     portfolio_empty: "İlerlemeni görmek için yukarıdan varlık ekle.",
     portfolio_note: "Özgürlük hedefi = yıllık gider ÷ seçilen getiri. Pasif gelir = değer × getiri. Tahmindir, tavsiye değildir.",
+    nav_income: "Gelirler",
+    income_title: "Gelirlerin", income_sub: "Aylık gelirini ekle. Pasif olanları işaretle (kira, faiz, temettü); özgürlüğe yalnızca pasif gelir sayılır.",
+    add_income: "+ Gelir ekle", income_ph: "Gelir kaynağı", total_income: "Toplam aylık gelir",
+    passive_label: "Pasif", active_label: "Aktif", covered_by_passive: "pasif gelirle karşılanıyor",
+    surplus_line: "Yatırıma ayırabileceğin yaklaşık {x}/ay artıyor.", deficit_line: "Kazandığından ayda yaklaşık {x} fazla harcıyorsun.",
+    income_free: "🎉 Finansal özgürsün: pasif gelirin giderlerini zaten karşılıyor!",
+    income_empty: "Durumunu görmek için yukarıdan gelir ekle.",
+    income_note: "Pasif gelir = kira, faiz, temettü ve benzeri. Finansal özgürlük = pasif gelir ≥ giderlerin.",
+    inc: { salary: "Maaş", rental: "Kira geliri", interest: "Faiz geliri", dividends: "Temettü", side: "Ek / serbest gelir" },
     note_historical: "Tarihsel ortalamalara dayanır, garanti değildir.",
     note_btc_warn: "Bitcoin son derece oynaktır; bu rakam spekülatiftir.",
     note_btc_tl: "Lira bazında son ~12 ayın getirisi (≈ +%37, 2026 ortası itibarıyla, kaynak: CoinGecko). Bitcoin son derece oynaktır, tek bir yıl tahmin değildir.",
@@ -254,6 +280,15 @@ const I18N = {
     freedom_reached: "🎉 你已达到自由数字。你的投资可以覆盖你的支出！",
     portfolio_empty: "在上方添加持仓以查看你的进度。",
     portfolio_note: "自由目标 = 年支出 ÷ 所选收益率。被动收入 = 价值 × 收益率。仅为估算，非建议。",
+    nav_income: "收入",
+    income_title: "你的收入", income_sub: "添加你的每月收入。标记其中的被动收入（租金、利息、股息）；只有被动收入计入财务自由。",
+    add_income: "+ 添加收入", income_ph: "收入来源", total_income: "每月总收入",
+    passive_label: "被动", active_label: "主动", covered_by_passive: "由被动收入覆盖",
+    surplus_line: "你每月大约还剩 {x} 可用于投资。", deficit_line: "你每月支出比收入多约 {x}。",
+    income_free: "🎉 财务自由：你的被动收入已覆盖你的支出！",
+    income_empty: "在上方添加收入以查看你的状况。",
+    income_note: "被动收入 = 租金、利息、股息等。财务自由 = 被动收入 ≥ 你的支出。",
+    inc: { salary: "工资", rental: "租金收入", interest: "利息收入", dividends: "股息", side: "副业 / 自由职业收入" },
     note_historical: "基于历史平均，不构成保证。",
     note_btc_warn: "比特币极度波动；该数字为投机性。",
     note_btc_tl: "以里拉计的近 ~12 个月收益（≈ +37%，截至 2026 年中，来源：CoinGecko）。比特币极度波动，单一年份并非预测。",
@@ -305,8 +340,10 @@ const state = {
     holdings: [], seq: 0,
     target: { USD: [SAVINGS_DEFAULT_INVEST.USD], TL: [SAVINGS_DEFAULT_INVEST.TL] },
   },
+  income: { amounts: {}, passive: {}, custom: [], seq: 0 },
 };
 SAVINGS_CATEGORIES.forEach((id) => { state.savings.amounts[id] = 0; state.savings.on[id] = true; });
+INCOME_CATEGORIES.forEach((c) => { state.income.amounts[c.id] = 0; state.income.passive[c.id] = c.passive; });
 // start with a few empty holding rows (no preset values)
 [0, 1, 2].forEach(() => state.portfolio.holdings.push({ id: "h" + ++state.portfolio.seq, label: "", value: 0 }));
 
@@ -333,6 +370,7 @@ function instNote(inst) {
   return "";
 }
 function catLabel(id) { return L().cat[id] || I18N.en.cat[id] || id; }
+function incLabel(id) { return (L().inc && L().inc[id]) || I18N.en.inc[id] || id; }
 function catHint(id) { const k = id + "_hint"; return L().cat[k] || I18N.en.cat[k] || ""; }
 
 // ---- Elements ----
@@ -366,6 +404,15 @@ const el = {
   portTarget: document.getElementById("portTarget"),
   portBarFill: document.getElementById("portBarFill"),
   portPunch: document.getElementById("portPunch"),
+  // income view
+  incList: document.getElementById("incList"),
+  addIncome: document.getElementById("addIncome"),
+  incTotal: document.getElementById("incTotal"),
+  incBreakdown: document.getElementById("incBreakdown"),
+  incPct: document.getElementById("incPct"),
+  incBarFill: document.getElementById("incBarFill"),
+  incPunch: document.getElementById("incPunch"),
+  incSurplus: document.getElementById("incSurplus"),
 };
 
 // ---- Helpers ----
@@ -869,6 +916,102 @@ function refreshPortfolio() {
 }
 
 // ============================================================
+//  Income
+// ============================================================
+function buildIncome() {
+  el.incList.innerHTML = "";
+  INCOME_CATEGORIES.forEach((c) => el.incList.appendChild(makeIncomeRow(c.id, false)));
+  state.income.custom.forEach((c) => el.incList.appendChild(makeIncomeRow(c.id, true)));
+}
+
+function makeIncomeRow(id, isCustom) {
+  const meta = CURRENCY_META[state.currency];
+  const custom = isCustom ? state.income.custom.find((x) => x.id === id) : null;
+  const label = isCustom ? (custom ? custom.label : "") : incLabel(id);
+  const passive = !!state.income.passive[id];
+  const amt = state.income.amounts[id];
+  const row = document.createElement("div");
+  row.className = "cat-row inc-row" + (passive ? " is-passive" : "");
+  row.dataset.inc = id;
+
+  const labelHtml = isCustom
+    ? `<input class="cat-name" data-inc-name="${id}" value="${label ? label.replace(/"/g, "&quot;") : ""}" placeholder="${t("income_ph")}" />`
+    : label;
+
+  row.innerHTML = `
+    <label class="switch switch--sm inc-toggle">
+      <input type="checkbox" data-inc-passive="${id}" ${passive ? "checked" : ""} />
+      <span class="switch-track"><span class="switch-thumb"></span></span>
+    </label>
+    <div class="cat-label">${labelHtml}<small class="inc-type" data-inc-type>${passive ? t("passive_label") : t("active_label")}</small></div>
+    <div class="money-input money-input--sm cat-amount">
+      <span class="money-symbol savings-symbol">${meta.symbol}</span>
+      <input type="text" inputmode="numeric" data-inc-amt="${id}" value="${amt ? formatThousands(amt) : ""}" placeholder="0" />
+    </div>
+    ${isCustom ? `<button class="cat-remove" type="button" data-inc-del="${id}" aria-label="remove">×</button>` : ""}`;
+
+  row.querySelector("[data-inc-passive]").addEventListener("change", (e) => {
+    state.income.passive[id] = e.target.checked;
+    row.classList.toggle("is-passive", e.target.checked);
+    row.querySelector("[data-inc-type]").textContent = e.target.checked ? t("passive_label") : t("active_label");
+    refreshIncome();
+  });
+  const amtInput = row.querySelector("[data-inc-amt]");
+  amtInput.addEventListener("input", () => { state.income.amounts[id] = parseNumber(amtInput.value); refreshIncome(); });
+  amtInput.addEventListener("blur", () => { if (state.income.amounts[id] > 0) amtInput.value = formatThousands(state.income.amounts[id]); });
+  if (isCustom) {
+    row.querySelector("[data-inc-name]").addEventListener("input", (e) => { const c = state.income.custom.find((x) => x.id === id); if (c) c.label = e.target.value; });
+    row.querySelector("[data-inc-del]").addEventListener("click", () => {
+      state.income.custom = state.income.custom.filter((x) => x.id !== id);
+      delete state.income.amounts[id]; delete state.income.passive[id];
+      row.remove(); refreshIncome();
+    });
+  }
+  return row;
+}
+
+function addIncome() {
+  const id = "inc" + ++state.income.seq;
+  state.income.amounts[id] = 0; state.income.passive[id] = false;
+  state.income.custom.push({ id, label: "" });
+  const row = makeIncomeRow(id, true);
+  el.incList.appendChild(row);
+  row.querySelector("[data-inc-name]").focus();
+  refreshIncome();
+}
+
+function refreshIncome() {
+  const meta = CURRENCY_META[state.currency];
+  document.querySelectorAll("#view-income .savings-symbol").forEach((s) => (s.textContent = meta.symbol));
+
+  let total = 0, passive = 0;
+  const add = (id) => { const a = state.income.amounts[id] || 0; total += a; if (state.income.passive[id]) passive += a; };
+  INCOME_CATEGORIES.forEach((c) => add(c.id));
+  state.income.custom.forEach((c) => add(c.id));
+  const active = total - passive;
+  const exp = state.monthlyExpenses;
+
+  el.incTotal.textContent = formatMoney(total);
+  el.incBreakdown.textContent = `${t("passive_label")}: ${formatMoney(passive)} · ${t("active_label")}: ${formatMoney(active)}`;
+
+  const pct = exp > 0 ? (passive / exp) * 100 : 0;
+  el.incPct.textContent = Math.round(pct) + "%";
+  el.incBarFill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+
+  const surplus = total - exp;
+  if (total <= 0) {
+    el.incPunch.textContent = t("income_empty");
+    el.incSurplus.textContent = "";
+  } else if (pct >= 100) {
+    el.incPunch.textContent = t("income_free");
+    el.incSurplus.textContent = surplus > 0 ? t("surplus_line", { x: formatMoney(surplus) }) : "";
+  } else {
+    el.incPunch.textContent = surplus >= 0 ? t("surplus_line", { x: formatMoney(surplus) }) : t("deficit_line", { x: formatMoney(-surplus) });
+    el.incSurplus.textContent = "";
+  }
+}
+
+// ============================================================
 //  Language + Theme
 // ============================================================
 function applyLanguage(lang) {
@@ -879,6 +1022,7 @@ function applyLanguage(lang) {
   buildLayout(); refresh();
   buildSavings(); refreshSavings();
   buildPortfolio(); refreshPortfolio();
+  buildIncome(); refreshIncome();
   updateSettingsActive();
   try { localStorage.setItem("numbr_lang", lang); } catch (e) {}
 }
@@ -898,7 +1042,7 @@ function setCurrency(cur) {
   if (cur === state.currency || !CURRENCY_META[cur]) return;
   state.currency = cur;
   el.inflation.value = formatRate(state.inflation[cur], false);
-  buildLayout(); refresh(); refreshSavings(); refreshPortfolio();
+  buildLayout(); refresh(); refreshSavings(); refreshPortfolio(); refreshIncome();
   updateSettingsActive();
   try { localStorage.setItem("numbr_currency", cur); } catch (e) {}
 }
@@ -910,6 +1054,7 @@ el.addCat.addEventListener("click", addCustomCategory);
 el.investSelect.addEventListener("change", () => { state.savings.invest[state.currency] = el.investSelect.value; refreshSavings(); });
 
 el.addHolding.addEventListener("click", addHolding);
+el.addIncome.addEventListener("click", addIncome);
 
 el.expenses.addEventListener("input", () => { state.monthlyExpenses = parseNumber(el.expenses.value); refresh(); });
 el.expenses.addEventListener("blur", () => { if (state.monthlyExpenses > 0) el.expenses.value = formatThousands(state.monthlyExpenses); });
@@ -937,9 +1082,11 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
     document.getElementById("view-savings").hidden = name !== "savings";
     document.getElementById("view-settings").hidden = name !== "settings";
     document.getElementById("view-portfolio").hidden = name !== "portfolio";
+    document.getElementById("view-income").hidden = name !== "income";
     document.querySelector(".brand").hidden = name !== "home"; // logo only on Home
     if (name === "savings") refreshSavings();
     if (name === "portfolio") refreshPortfolio();
+    if (name === "income") refreshIncome();
     window.scrollTo({ top: 0, behavior: "auto" });
   }
   tabs.forEach((tab) => {
