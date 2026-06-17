@@ -40,8 +40,10 @@ const INCOME_CATEGORIES = [
   { id: "dividends", passive: true },
   { id: "side", passive: false },
 ];
-// Portfolio holding asset types (tags). Interest-bearing & rental ones feed Income.
-const ASSET_TYPES = ["stocks", "crypto", "deposit", "bonds", "realestate", "gold", "cash"];
+// Portfolio holding asset types (tags). Interest-bearing ones feed Income.
+const ASSET_TYPES = ["stocks", "crypto", "deposit", "bonds", "gold", "cash"];
+const WITHHOLD_PCT = 15; // approx. withholding tax (stopaj) on deposit/bond interest
+let cryptoMarkets = []; // top coins for the active currency: [{ id, symbol, name, price }]
 
 // ============================================================
 //  i18n dictionary
@@ -102,6 +104,7 @@ const I18N = {
     cat_cash: "Cash", cat_investment: "Investment",
     asset_stocks: "Stocks", asset_crypto: "Crypto", asset_deposit: "Deposit", asset_bonds: "Bonds", asset_realestate: "Real estate", asset_gold: "Gold", asset_cash: "Cash",
     inc_from_portfolio: "+{x}/mo from portfolio",
+    net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…",
     target_via: "Freedom target via (pick one or more)", target_x: "Target {x}", to_freedom: "to financial freedom", blended_return: "Blended return",
     income_line: "Right now your portfolio could generate about {income}/month, covering {pct} of your expenses.",
     freedom_reached: "🎉 You've reached your freedom number. Your investments can cover your expenses!",
@@ -197,6 +200,7 @@ const I18N = {
     cat_cash: "Nakit", cat_investment: "Yatırım",
     asset_stocks: "Hisse", asset_crypto: "Kripto", asset_deposit: "Mevduat", asset_bonds: "Tahvil", asset_realestate: "Gayrimenkul", asset_gold: "Altın", asset_cash: "Nakit",
     inc_from_portfolio: "+{x}/ay portföyden",
+    net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…",
     target_via: "Özgürlük hedefi (bir veya birkaçını seç)", target_x: "Hedef {x}", to_freedom: "finansal özgürlüğe", blended_return: "Karma getiri",
     income_line: "Şu an portföyün ayda yaklaşık {income} üretebilir, giderlerinin {pct} kadarını karşılar.",
     freedom_reached: "🎉 Özgürlük rakamına ulaştın. Yatırımların giderlerini karşılayabilir!",
@@ -292,6 +296,7 @@ const I18N = {
     cat_cash: "现金", cat_investment: "投资",
     asset_stocks: "股票", asset_crypto: "加密货币", asset_deposit: "存款", asset_bonds: "债券", asset_realestate: "房地产", asset_gold: "黄金", asset_cash: "现金",
     inc_from_portfolio: "+{x}/月 来自投资组合",
+    net_tax: "净额（−15% 税）", coin_search_ph: "搜索币种（如 Solana）", qty_ph: "数量", coin_loading: "正在加载实时价格…",
     target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
     income_line: "目前你的投资组合每月约可产生 {income}，覆盖你支出的 {pct}。",
     freedom_reached: "🎉 你已达到自由数字。你的投资可以覆盖你的支出！",
@@ -835,54 +840,154 @@ function buildPortfolio() {
   state.portfolio.holdings.forEach((h) => el.portList.appendChild(makeHoldingRow(h.id)));
 }
 
-function makeHoldingRow(id) {
-  const meta = CURRENCY_META[state.currency];
-  const h = state.portfolio.holdings.find((x) => x.id === id);
-  const row = document.createElement("div");
-  row.className = "cat-row port-row";
-  row.dataset.hold = id;
-  const safeLabel = h && h.label ? h.label.replace(/"/g, "&quot;") : "";
-  const at = (h && h.assetType) || "stocks";
-  const options = ASSET_TYPES.map((tp) => `<option value="${tp}" ${tp === at ? "selected" : ""}>${t("asset_" + tp)}</option>`).join("");
-  row.innerHTML = `
-    <div class="port-namecell">
-      <input class="cat-name port-name" data-hold-name="${id}" value="${safeLabel}" placeholder="${t("holding_ph")}" />
-      <select class="hold-type" data-hold-type="${id}" aria-label="asset type">${options}</select>
-    </div>
-    <div class="money-input money-input--sm cat-amount">
-      <span class="money-symbol savings-symbol">${meta.symbol}</span>
-      <input type="text" inputmode="numeric" data-hold-val="${id}" value="${h && h.value ? formatThousands(h.value) : ""}" placeholder="0" />
-    </div>
-    <button class="cat-remove" type="button" data-hold-del="${id}" aria-label="remove">×</button>`;
-
-  row.querySelector("[data-hold-name]").addEventListener("input", (e) => {
-    const x = state.portfolio.holdings.find((y) => y.id === id);
-    if (x) x.label = e.target.value;
-  });
+function holdById(id) { return state.portfolio.holdings.find((y) => y.id === id); }
+function rebuildHoldingRow(id) {
+  const old = el.portList.querySelector(`[data-hold="${id}"]`);
+  if (old) old.replaceWith(makeHoldingRow(id));
+}
+function wireTypeSelect(row, id) {
   row.querySelector("[data-hold-type]").addEventListener("change", (e) => {
-    const x = state.portfolio.holdings.find((y) => y.id === id);
+    const x = holdById(id);
     if (x) x.assetType = e.target.value;
+    rebuildHoldingRow(id); // switch input mode (crypto search / net toggle)
     refreshPortfolio();
     refreshIncome();
   });
-  const v = row.querySelector("[data-hold-val]");
-  v.addEventListener("input", () => {
-    const x = state.portfolio.holdings.find((y) => y.id === id);
-    if (x) x.value = parseNumber(v.value);
-    refreshPortfolio();
-    refreshIncome();
-  });
-  v.addEventListener("blur", () => {
-    const x = state.portfolio.holdings.find((y) => y.id === id);
-    if (x && x.value > 0) v.value = formatThousands(x.value);
-  });
+}
+function wireRemove(row, id) {
   row.querySelector("[data-hold-del]").addEventListener("click", () => {
     state.portfolio.holdings = state.portfolio.holdings.filter((y) => y.id !== id);
     row.remove();
     refreshPortfolio();
     refreshIncome();
   });
+}
+function updateCryptoValue(row, id) {
+  const x = holdById(id);
+  const node = row.querySelector("[data-coin-value]");
+  if (!node || !x) return;
+  if (x.price && x.qty) node.innerHTML = `${formatMoney(x.value)} <small>${x.qty} ${x.coinSymbol || ""} @ ${formatMoney(x.price)}</small>`;
+  else if (x.price) node.innerHTML = `<small>@ ${formatMoney(x.price)} / ${x.coinSymbol || ""}</small>`;
+  else node.textContent = "";
+}
+function wireCryptoRow(row, id) {
+  const search = row.querySelector("[data-coin-search]");
+  const dd = row.querySelector("[data-coin-dd]");
+  const qty = row.querySelector("[data-coin-qty]");
+  function renderDropdown(q) {
+    if (!cryptoMarkets.length) { dd.innerHTML = `<div class="coin-opt coin-opt--msg">${t("coin_loading")}</div>`; dd.hidden = false; return; }
+    const ql = (q || "").trim().toLowerCase();
+    const list = ql ? cryptoMarkets.filter((c) => c.name.toLowerCase().includes(ql) || c.symbol.toLowerCase().includes(ql)) : cryptoMarkets;
+    const matches = list.slice(0, 8);
+    if (!matches.length) { dd.hidden = true; return; }
+    dd.innerHTML = matches.map((c) => `<button type="button" class="coin-opt" data-coin-id="${c.id}">${escapeHtml(c.name)} <span>${c.symbol}</span></button>`).join("");
+    dd.hidden = false;
+    dd.querySelectorAll("[data-coin-id]").forEach((b) =>
+      b.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        const c = cryptoMarkets.find((x) => x.id === b.dataset.coinId);
+        const x = holdById(id);
+        x.coinId = c.id; x.coinName = c.name; x.coinSymbol = c.symbol; x.price = c.price; x.label = c.name;
+        x.value = (x.qty || 0) * c.price;
+        search.value = c.name; dd.hidden = true;
+        updateCryptoValue(row, id);
+        refreshPortfolio(); refreshIncome();
+      })
+    );
+  }
+  search.addEventListener("input", () => renderDropdown(search.value));
+  search.addEventListener("focus", () => renderDropdown(search.value));
+  search.addEventListener("blur", () => setTimeout(() => { dd.hidden = true; }, 150));
+  qty.addEventListener("input", () => {
+    const x = holdById(id);
+    x.qty = parseNumber(qty.value);
+    x.value = (x.qty || 0) * (x.price || 0);
+    updateCryptoValue(row, id);
+    refreshPortfolio(); refreshIncome();
+  });
+  updateCryptoValue(row, id);
+}
+
+function makeHoldingRow(id) {
+  const meta = CURRENCY_META[state.currency];
+  const h = holdById(id) || {};
+  const at = h.assetType || "stocks";
+  const row = document.createElement("div");
+  row.className = "cat-row port-row";
+  row.dataset.hold = id;
+  const options = ASSET_TYPES.map((tp) => `<option value="${tp}" ${tp === at ? "selected" : ""}>${t("asset_" + tp)}</option>`).join("");
+  const typeSelect = `<select class="hold-type" data-hold-type="${id}" aria-label="asset type">${options}</select>`;
+
+  if (at === "crypto") {
+    const coinName = h.coinName ? h.coinName.replace(/"/g, "&quot;") : "";
+    row.innerHTML = `
+      <div class="port-namecell">
+        <div class="coin-search">
+          <input class="cat-name" type="text" autocomplete="off" data-coin-search="${id}" value="${coinName}" placeholder="${t("coin_search_ph")}" />
+          <div class="coin-dropdown" data-coin-dd="${id}" hidden></div>
+        </div>
+        ${typeSelect}
+      </div>
+      <div class="crypto-cell">
+        <input class="qty-field" type="text" inputmode="decimal" data-coin-qty="${id}" value="${h.qty ? h.qty : ""}" placeholder="${t("qty_ph")}" />
+        <div class="crypto-value" data-coin-value="${id}"></div>
+      </div>
+      <button class="cat-remove" type="button" data-hold-del="${id}" aria-label="remove">×</button>`;
+    wireTypeSelect(row, id);
+    wireRemove(row, id);
+    wireCryptoRow(row, id);
+  } else {
+    const safeLabel = h.label ? h.label.replace(/"/g, "&quot;") : "";
+    const isInterest = at === "deposit" || at === "bonds";
+    const netBtn = isInterest
+      ? `<button type="button" class="net-tax-btn ${h.netTax ? "is-on" : ""}" data-hold-net="${id}">${t("net_tax")}</button>`
+      : "";
+    row.innerHTML = `
+      <div class="port-namecell">
+        <input class="cat-name port-name" data-hold-name="${id}" value="${safeLabel}" placeholder="${t("holding_ph")}" />
+        <div class="port-tags">${typeSelect}${netBtn}</div>
+      </div>
+      <div class="money-input money-input--sm cat-amount">
+        <span class="money-symbol savings-symbol">${meta.symbol}</span>
+        <input type="text" inputmode="numeric" data-hold-val="${id}" value="${h.value ? formatThousands(h.value) : ""}" placeholder="0" />
+      </div>
+      <button class="cat-remove" type="button" data-hold-del="${id}" aria-label="remove">×</button>`;
+    wireTypeSelect(row, id);
+    wireRemove(row, id);
+    row.querySelector("[data-hold-name]").addEventListener("input", (e) => { const x = holdById(id); if (x) x.label = e.target.value; });
+    const v = row.querySelector("[data-hold-val]");
+    v.addEventListener("input", () => { const x = holdById(id); if (x) x.value = parseNumber(v.value); refreshPortfolio(); refreshIncome(); });
+    v.addEventListener("blur", () => { const x = holdById(id); if (x && x.value > 0) v.value = formatThousands(x.value); });
+    const netBtnEl = row.querySelector("[data-hold-net]");
+    if (netBtnEl) netBtnEl.addEventListener("click", () => { const x = holdById(id); x.netTax = !x.netTax; netBtnEl.classList.toggle("is-on", x.netTax); refreshPortfolio(); refreshIncome(); });
+  }
   return row;
+}
+
+// ---- Live crypto prices (CoinGecko, client-side; works on the deployed site) ----
+async function loadCryptoMarkets() {
+  const vs = state.currency === "TL" ? "try" : "usd";
+  const key = "numbr_crypto_" + vs;
+  try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) { cryptoMarkets = c.data; return; } } catch (e) {}
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${vs}&order=market_cap_desc&per_page=50&page=1&sparkline=false`);
+    if (!res.ok) return;
+    const json = await res.json();
+    cryptoMarkets = json.map((c) => ({ id: c.id, symbol: (c.symbol || "").toUpperCase(), name: c.name, price: c.current_price }));
+    try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), data: cryptoMarkets })); } catch (e) {}
+  } catch (e) { /* offline / local file:// — silently ignore, works once deployed */ }
+}
+async function refreshCryptoPrices() {
+  await loadCryptoMarkets();
+  state.portfolio.holdings.forEach((h) => {
+    if (h.assetType === "crypto" && h.coinId) {
+      const m = cryptoMarkets.find((x) => x.id === h.coinId);
+      if (m) { h.price = m.price; h.value = (h.qty || 0) * m.price; }
+    }
+  });
+  buildPortfolio();
+  refreshPortfolio();
+  refreshIncome();
 }
 
 function addHolding() {
@@ -890,7 +995,8 @@ function addHolding() {
   state.portfolio.holdings.push({ id, label: "", value: 0, assetType: "stocks" });
   const row = makeHoldingRow(id);
   el.portList.appendChild(row);
-  row.querySelector("[data-hold-name]").focus();
+  const nameInput = row.querySelector("[data-hold-name]");
+  if (nameInput) nameInput.focus();
   refreshPortfolio();
 }
 
@@ -916,9 +1022,13 @@ function portfolioYield() {
   let interest = 0, rental = 0;
   state.portfolio.holdings.forEach((h) => {
     if (!h.value) return;
-    const monthly = (h.value * (assetRate(h.assetType, cur) / 100)) / 12;
-    if (h.assetType === "deposit" || h.assetType === "bonds") interest += monthly;
-    else if (h.assetType === "realestate") rental += monthly;
+    let monthly = (h.value * (assetRate(h.assetType, cur) / 100)) / 12;
+    if (h.assetType === "deposit" || h.assetType === "bonds") {
+      if (h.netTax) monthly *= 1 - WITHHOLD_PCT / 100; // deduct withholding tax (stopaj)
+      interest += monthly;
+    } else if (h.assetType === "realestate") {
+      rental += monthly;
+    }
   });
   return { interest, rental };
 }
@@ -1141,6 +1251,7 @@ function setCurrency(cur) {
   state.currency = cur;
   el.inflation.value = formatRate(state.inflation[cur], false);
   buildLayout(); refresh(); refreshSavings(); refreshPortfolio(); refreshIncome();
+  refreshCryptoPrices(); // refetch crypto prices in the new currency
   updateSettingsActive();
   try { localStorage.setItem("numbr_currency", cur); } catch (e) {}
 }
@@ -1211,3 +1322,4 @@ el.expenses.value = formatThousands(state.monthlyExpenses);
 el.inflation.value = formatRate(state.inflation[state.currency], false);
 applyTheme(state.theme);
 applyLanguage(state.lang); // builds layout + savings, applies all translations
+refreshCryptoPrices(); // fetch live crypto prices (works on the deployed site)
