@@ -621,8 +621,19 @@ body {
 .blended-rate strong { font-family: "Sora", sans-serif; color: var(--good); font-size: 15px; margin-left: 2px; }
 
 /* ---------- Income ---------- */
-.inc-type { display: block; font-size: 11.5px; color: var(--text-faint); font-weight: 400; }
-.inc-row.is-passive .inc-type { color: var(--good); }
+.inc-type {
+  display: inline-block; margin-left: 8px; vertical-align: middle;
+  font-family: inherit; font-size: 11px; font-weight: 600;
+  padding: 2px 9px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-faint); border: 1px solid var(--glass-border-soft);
+}
+.inc-row.is-passive .inc-type {
+  color: var(--good);
+  border-color: color-mix(in srgb, var(--good) 45%, transparent);
+  background: color-mix(in srgb, var(--good) 13%, transparent);
+}
+.inc-type--btn { cursor: pointer; }
 .inc-surplus { margin: 2px 0 0; font-size: 13.5px; color: var(--text-dim); }
 .port-progress { display: flex; flex-direction: column; gap: 10px; }
 .port-progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
