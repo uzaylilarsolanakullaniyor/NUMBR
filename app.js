@@ -40,6 +40,8 @@ const INCOME_CATEGORIES = [
   { id: "dividends", passive: true },
   { id: "side", passive: false },
 ];
+// Portfolio holding asset types (tags). Interest-bearing & rental ones feed Income.
+const ASSET_TYPES = ["stocks", "crypto", "deposit", "bonds", "realestate", "gold", "cash"];
 
 // ============================================================
 //  i18n dictionary
@@ -98,6 +100,8 @@ const I18N = {
     flow_title: "Monthly cash flow", flow_income: "Income", flow_expenses: "Expenses", flow_net: "Net / month",
     flow_savings_note: "+{x}/month more if you cut your tracked spending.",
     cat_cash: "Cash", cat_investment: "Investment",
+    asset_stocks: "Stocks", asset_crypto: "Crypto", asset_deposit: "Deposit", asset_bonds: "Bonds", asset_realestate: "Real estate", asset_gold: "Gold", asset_cash: "Cash",
+    inc_from_portfolio: "+{x}/mo from portfolio",
     target_via: "Freedom target via (pick one or more)", target_x: "Target {x}", to_freedom: "to financial freedom", blended_return: "Blended return",
     income_line: "Right now your portfolio could generate about {income}/month, covering {pct} of your expenses.",
     freedom_reached: "🎉 You've reached your freedom number. Your investments can cover your expenses!",
@@ -191,6 +195,8 @@ const I18N = {
     flow_title: "Aylık nakit akışı", flow_income: "Gelir", flow_expenses: "Gider", flow_net: "Aylık net",
     flow_savings_note: "Takip ettiğin harcamaları kısarsan ayda +{x} daha.",
     cat_cash: "Nakit", cat_investment: "Yatırım",
+    asset_stocks: "Hisse", asset_crypto: "Kripto", asset_deposit: "Mevduat", asset_bonds: "Tahvil", asset_realestate: "Gayrimenkul", asset_gold: "Altın", asset_cash: "Nakit",
+    inc_from_portfolio: "+{x}/ay portföyden",
     target_via: "Özgürlük hedefi (bir veya birkaçını seç)", target_x: "Hedef {x}", to_freedom: "finansal özgürlüğe", blended_return: "Karma getiri",
     income_line: "Şu an portföyün ayda yaklaşık {income} üretebilir, giderlerinin {pct} kadarını karşılar.",
     freedom_reached: "🎉 Özgürlük rakamına ulaştın. Yatırımların giderlerini karşılayabilir!",
@@ -284,6 +290,8 @@ const I18N = {
     flow_title: "每月现金流", flow_income: "收入", flow_expenses: "支出", flow_net: "每月净额",
     flow_savings_note: "如果削减你记录的开支，每月可多 +{x}。",
     cat_cash: "现金", cat_investment: "投资",
+    asset_stocks: "股票", asset_crypto: "加密货币", asset_deposit: "存款", asset_bonds: "债券", asset_realestate: "房地产", asset_gold: "黄金", asset_cash: "现金",
+    inc_from_portfolio: "+{x}/月 来自投资组合",
     target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
     income_line: "目前你的投资组合每月约可产生 {income}，覆盖你支出的 {pct}。",
     freedom_reached: "🎉 你已达到自由数字。你的投资可以覆盖你的支出！",
@@ -354,7 +362,7 @@ const state = {
 SAVINGS_CATEGORIES.forEach((id) => { state.savings.amounts[id] = 0; state.savings.on[id] = true; });
 INCOME_CATEGORIES.forEach((c) => { state.income.amounts[c.id] = 0; state.income.passive[c.id] = c.passive; });
 // start with a few empty holding rows (no preset values)
-[0, 1, 2].forEach(() => state.portfolio.holdings.push({ id: "h" + ++state.portfolio.seq, label: "", value: 0, category: "investment" }));
+[0, 1, 2].forEach(() => state.portfolio.holdings.push({ id: "h" + ++state.portfolio.seq, label: "", value: 0, assetType: "stocks" }));
 
 // ---- i18n helpers ----
 function L() { return I18N[state.lang] || I18N.en; }
@@ -834,11 +842,12 @@ function makeHoldingRow(id) {
   row.className = "cat-row port-row";
   row.dataset.hold = id;
   const safeLabel = h && h.label ? h.label.replace(/"/g, "&quot;") : "";
-  const cat = h && h.category === "cash" ? "cash" : "investment";
+  const at = (h && h.assetType) || "stocks";
+  const options = ASSET_TYPES.map((tp) => `<option value="${tp}" ${tp === at ? "selected" : ""}>${t("asset_" + tp)}</option>`).join("");
   row.innerHTML = `
     <div class="port-namecell">
       <input class="cat-name port-name" data-hold-name="${id}" value="${safeLabel}" placeholder="${t("holding_ph")}" />
-      <button type="button" class="inc-type inc-type--btn port-cat ${cat === "cash" ? "is-cash" : "is-invest"}" data-hold-cat="${id}">${cat === "cash" ? t("cat_cash") : t("cat_investment")}</button>
+      <select class="hold-type" data-hold-type="${id}" aria-label="asset type">${options}</select>
     </div>
     <div class="money-input money-input--sm cat-amount">
       <span class="money-symbol savings-symbol">${meta.symbol}</span>
@@ -850,21 +859,18 @@ function makeHoldingRow(id) {
     const x = state.portfolio.holdings.find((y) => y.id === id);
     if (x) x.label = e.target.value;
   });
-  const catBtn = row.querySelector("[data-hold-cat]");
-  catBtn.addEventListener("click", () => {
+  row.querySelector("[data-hold-type]").addEventListener("change", (e) => {
     const x = state.portfolio.holdings.find((y) => y.id === id);
-    const next = x.category === "cash" ? "investment" : "cash";
-    x.category = next;
-    catBtn.textContent = next === "cash" ? t("cat_cash") : t("cat_investment");
-    catBtn.classList.toggle("is-cash", next === "cash");
-    catBtn.classList.toggle("is-invest", next === "investment");
+    if (x) x.assetType = e.target.value;
     refreshPortfolio();
+    refreshIncome();
   });
   const v = row.querySelector("[data-hold-val]");
   v.addEventListener("input", () => {
     const x = state.portfolio.holdings.find((y) => y.id === id);
     if (x) x.value = parseNumber(v.value);
     refreshPortfolio();
+    refreshIncome();
   });
   v.addEventListener("blur", () => {
     const x = state.portfolio.holdings.find((y) => y.id === id);
@@ -874,13 +880,14 @@ function makeHoldingRow(id) {
     state.portfolio.holdings = state.portfolio.holdings.filter((y) => y.id !== id);
     row.remove();
     refreshPortfolio();
+    refreshIncome();
   });
   return row;
 }
 
 function addHolding() {
   const id = "h" + ++state.portfolio.seq;
-  state.portfolio.holdings.push({ id, label: "", value: 0, category: "investment" });
+  state.portfolio.holdings.push({ id, label: "", value: 0, assetType: "stocks" });
   const row = makeHoldingRow(id);
   el.portList.appendChild(row);
   row.querySelector("[data-hold-name]").focus();
@@ -890,14 +897,45 @@ function addHolding() {
 const PIE_COLORS = ["#7c5cff", "#21d4fd", "#2ee6a6", "#ffb454", "#ff7eb6", "#ffd54a", "#4f8cff", "#ff5ca8"];
 function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
+// Annual return rate (%) for a holding's asset type, currency-aware.
+function assetRate(type, cur) {
+  const r = state.rates[cur];
+  switch (type) {
+    case "stocks": return cur === "TL" ? r.bist : r.sp500;
+    case "crypto": return r.btc;
+    case "deposit": return cur === "TL" ? r.deposit : r.savings;
+    case "bonds": return cur === "TL" ? r.eurobond : r.treasury;
+    case "realestate": return r.realestate;
+    case "gold": return cur === "TL" ? r.gold : 0;
+    default: return 0; // cash
+  }
+}
+// Monthly income generated by holdings: interest (deposit/bonds), rent (real estate).
+function portfolioYield() {
+  const cur = state.currency;
+  let interest = 0, rental = 0;
+  state.portfolio.holdings.forEach((h) => {
+    if (!h.value) return;
+    const monthly = (h.value * (assetRate(h.assetType, cur) / 100)) / 12;
+    if (h.assetType === "deposit" || h.assetType === "bonds") interest += monthly;
+    else if (h.assetType === "realestate") rental += monthly;
+  });
+  return { interest, rental };
+}
+function incomeManualTotal() {
+  let t = 0;
+  INCOME_CATEGORIES.forEach((c) => (t += state.income.amounts[c.id] || 0));
+  state.income.custom.forEach((c) => (t += state.income.amounts[c.id] || 0));
+  return t;
+}
+
 function refreshPortfolio() {
   const meta = CURRENCY_META[state.currency];
   document.querySelectorAll("#view-portfolio .savings-symbol").forEach((s) => (s.textContent = meta.symbol));
 
-  // --- Monthly cash flow (pulled live from Income / Home / Savings) ---
-  let income = 0;
-  INCOME_CATEGORIES.forEach((c) => (income += state.income.amounts[c.id] || 0));
-  state.income.custom.forEach((c) => (income += state.income.amounts[c.id] || 0));
+  // --- Monthly cash flow (Income incl. portfolio yield − Expenses) ---
+  const py = portfolioYield();
+  const income = incomeManualTotal() + py.interest + py.rental;
   let sav = 0;
   SAVINGS_CATEGORIES.forEach((id) => { if (state.savings.on[id]) sav += state.savings.amounts[id] || 0; });
   state.savings.custom.forEach((c) => { if (state.savings.on[c.id]) sav += state.savings.amounts[c.id] || 0; });
@@ -939,12 +977,12 @@ function refreshPortfolio() {
     .join("");
   el.portDonut.innerHTML = `<circle cx="21" cy="21" r="15.915" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" />${ring}`;
 
-  // Legend grouped under Investment / Cash headings with subtotals
-  const groups = [["investment", t("cat_investment")], ["cash", t("cat_cash")]];
-  el.portLegend.innerHTML = groups
-    .map(([key, label]) => {
-      const items = segs.filter((h) => (h.category === "cash" ? "cash" : "investment") === key);
+  // Legend grouped by asset type with subtotals
+  el.portLegend.innerHTML = ASSET_TYPES
+    .map((key) => {
+      const items = segs.filter((h) => (h.assetType || "stocks") === key);
       if (!items.length) return "";
+      const label = t("asset_" + key);
       const sub = items.reduce((s, h) => s + h.value, 0);
       const rows = items
         .map((h) => {
@@ -987,7 +1025,7 @@ function makeIncomeRow(id, isCustom) {
     : `<span class="inc-type">${passive ? t("passive_label") : t("active_label")}</span>`;
 
   row.innerHTML = `
-    <div class="cat-label">${labelHtml}${badge}</div>
+    <div class="cat-label">${labelHtml}${badge}<small class="inc-from-port" data-inc-port="${id}"></small></div>
     <div class="money-input money-input--sm cat-amount">
       <span class="money-symbol savings-symbol">${meta.symbol}</span>
       <input type="text" inputmode="numeric" data-inc-amt="${id}" value="${amt ? formatThousands(amt) : ""}" placeholder="0" />
@@ -1036,6 +1074,18 @@ function refreshIncome() {
   const add = (id) => { const a = state.income.amounts[id] || 0; total += a; if (state.income.passive[id]) passive += a; };
   INCOME_CATEGORIES.forEach((c) => add(c.id));
   state.income.custom.forEach((c) => add(c.id));
+
+  // Income generated by the portfolio (interest from deposits/bonds, rent from real estate)
+  const py = portfolioYield();
+  total += py.interest + py.rental;
+  passive += py.interest + py.rental;
+  const noteFor = (id, amt) => {
+    const node = document.querySelector(`#view-income [data-inc-port="${id}"]`);
+    if (node) node.textContent = amt > 0 ? t("inc_from_portfolio", { x: formatMoney(amt) }) : "";
+  };
+  noteFor("interest", py.interest);
+  noteFor("rental", py.rental);
+
   const active = total - passive;
   const exp = state.monthlyExpenses;
 

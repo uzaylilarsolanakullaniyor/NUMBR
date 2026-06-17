@@ -642,6 +642,22 @@ body {
 .port-cat.is-invest { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
 .port-cat.is-cash { color: var(--accent-2); border-color: color-mix(in srgb, var(--accent-2) 45%, transparent); background: color-mix(in srgb, var(--accent-2) 13%, transparent); }
 
+/* asset-type dropdown per holding */
+.hold-type {
+  align-self: flex-start; max-width: 100%;
+  background: rgba(0, 0, 0, 0.25); border: 1px solid var(--glass-border-soft);
+  color: var(--text-dim); font: inherit; font-size: 11.5px; font-weight: 600;
+  padding: 4px 8px; border-radius: 8px; cursor: pointer;
+}
+.hold-type:focus { outline: none; border-color: rgba(124, 92, 255, 0.6); }
+.hold-type option { color: #14182c; }
+[data-theme="xp"] .hold-type, [data-theme="doge"] .hold-type { background: #fff; border-color: #9a9a8a; color: #1a1a1a; }
+[data-theme="medieval"] .hold-type { background: #d8c39a; border-color: #6b4f2a; color: #2b1c0c; }
+
+/* portfolio-derived income note on Income rows */
+.inc-from-port { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 600; color: var(--good); }
+.inc-from-port:empty { display: none; }
+
 /* legend groups */
 .leg-group { display: flex; flex-direction: column; gap: 8px; }
 .leg-group + .leg-group { margin-top: 6px; }
