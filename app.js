@@ -122,7 +122,7 @@ const I18N = {
       treasury: { name: "US Treasury Bonds", sub: "~10-year approx." },
       sp500: { name: "S&P 500", sub: "SPX historical avg." },
       nasdaq: { name: "Nasdaq 100", sub: "Historical avg." },
-      btc: { name: "Bitcoin (BTC)", sub: "Speculative, see note", sub_tl: "Last 12 mo. · TRY" },
+      btc: { name: "Bitcoin (BTC)", sub: "Speculative", sub_tl: "Last 12 mo. · TRY" },
       realestate: { name: "Real Estate", sub: "Rental yield · rent ÷ value" },
       deposit: { name: "TL Deposit", sub: "Annual interest rate" },
       gold: { name: "Gold (in TL)", sub: "Gold priced in lira" },
@@ -215,7 +215,7 @@ const I18N = {
       treasury: { name: "ABD Hazine Tahvilleri", sub: "~10 yıllık" },
       sp500: { name: "S&P 500", sub: "SPX tarihsel ort." },
       nasdaq: { name: "Nasdaq 100", sub: "Tarihsel ort." },
-      btc: { name: "Bitcoin (BTC)", sub: "Spekülatif, nota bak", sub_tl: "Son 12 ay · TRY" },
+      btc: { name: "Bitcoin (BTC)", sub: "Spekülatif", sub_tl: "Son 12 ay · TRY" },
       realestate: { name: "Gayrimenkul", sub: "Kira getirisi · kira ÷ değer" },
       deposit: { name: "TL Mevduat", sub: "Yıllık faiz oranı" },
       gold: { name: "Altın (TL)", sub: "Lira cinsinden altın" },
@@ -308,7 +308,7 @@ const I18N = {
       treasury: { name: "美国国债", sub: "约 10 年期" },
       sp500: { name: "标普 500", sub: "SPX 历史平均" },
       nasdaq: { name: "纳斯达克 100", sub: "历史平均" },
-      btc: { name: "比特币 (BTC)", sub: "投机性, 见注释", sub_tl: "近 12 个月 · TRY" },
+      btc: { name: "比特币 (BTC)", sub: "投机性", sub_tl: "近 12 个月 · TRY" },
       realestate: { name: "房地产", sub: "租金收益率 · 租金 ÷ 价值" },
       deposit: { name: "里拉存款", sub: "年利率" },
       gold: { name: "黄金（里拉）", sub: "以里拉计价的黄金" },
@@ -508,7 +508,6 @@ function buildSimpleCard(inst, idx) {
   card.dataset.card = inst.id;
   card.style.setProperty("--card-color", inst.color);
   card.style.animationDelay = `${idx * 55}ms`;
-  const note = instNote(inst);
 
   card.innerHTML = `
     <div class="card-accent"></div>
@@ -530,7 +529,6 @@ function buildSimpleCard(inst, idx) {
       <div class="card-amount-value" data-amount>—</div>
       <div class="card-amount-label">${t("total_required")}</div>
       <div class="card-effrate" data-eff hidden></div>
-      ${note ? `<div class="card-warn-note">${note}</div>` : ""}
     </div>`;
   return card;
 }
@@ -589,8 +587,7 @@ function buildRealEstateCard(inst, idx, meta) {
           <span class="switch-label">${t("net_yield")} <small>${t("net_yield_sub")}</small></span>
         </label>
       </div>
-    </div>
-    <div class="card-warn-note">${t("re_note_" + cur)}</div>`;
+    </div>`;
   return card;
 }
 
