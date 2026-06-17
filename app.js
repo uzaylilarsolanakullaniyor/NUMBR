@@ -93,12 +93,12 @@ const I18N = {
     theme_vaporwave: "Vaporwave", theme_vaporwave_desc: "80s neon dream · A E S T H E T I C",
     more_soon: "More features coming soon ✨",
     nav_portfolio: "Portfolio",
-    portfolio_title: "Your portfolio", portfolio_sub: "Add what you already own and see how close you are to freedom.",
+    portfolio_title: "Your portfolio", portfolio_sub: "Add what you already own and see how it's spread across your assets.",
     holding_ph: "Holding name", add_holding: "+ Add holding", total_value: "Total portfolio value",
     target_via: "Freedom target via (pick one or more)", target_x: "Target {x}", to_freedom: "to financial freedom", blended_return: "Blended return",
     income_line: "Right now your portfolio could generate about {income}/month, covering {pct} of your expenses.",
     freedom_reached: "🎉 You've reached your freedom number. Your investments can cover your expenses!",
-    portfolio_empty: "Add your holdings above to see your progress.",
+    portfolio_empty: "Add your holdings above to see the breakdown.",
     portfolio_note: "Freedom target = yearly expenses ÷ chosen return. Passive income = value × return. Estimates, not advice.",
     nav_income: "Income",
     income_title: "Your income", income_sub: "Add your monthly income. Mark the passive ones (rent, interest, dividends); only passive income counts toward freedom.",
@@ -183,12 +183,12 @@ const I18N = {
     theme_vaporwave: "Vaporwave", theme_vaporwave_desc: "80'ler neon rüyası · A E S T H E T I C",
     more_soon: "Yeni özellikler yakında ✨",
     nav_portfolio: "Portföy",
-    portfolio_title: "Portföyün", portfolio_sub: "Sahip olduklarını ekle, özgürlüğe ne kadar yaklaştığını gör.",
+    portfolio_title: "Portföyün", portfolio_sub: "Sahip olduklarını ekle, varlıklarına nasıl dağıldığını gör.",
     holding_ph: "Varlık adı", add_holding: "+ Varlık ekle", total_value: "Toplam portföy değeri",
     target_via: "Özgürlük hedefi (bir veya birkaçını seç)", target_x: "Hedef {x}", to_freedom: "finansal özgürlüğe", blended_return: "Karma getiri",
     income_line: "Şu an portföyün ayda yaklaşık {income} üretebilir, giderlerinin {pct} kadarını karşılar.",
     freedom_reached: "🎉 Özgürlük rakamına ulaştın. Yatırımların giderlerini karşılayabilir!",
-    portfolio_empty: "İlerlemeni görmek için yukarıdan varlık ekle.",
+    portfolio_empty: "Dağılımı görmek için yukarıdan varlık ekle.",
     portfolio_note: "Özgürlük hedefi = yıllık gider ÷ seçilen getiri. Pasif gelir = değer × getiri. Tahmindir, tavsiye değildir.",
     nav_income: "Gelirler",
     income_title: "Gelirlerin", income_sub: "Aylık gelirini ekle. Pasif olanları işaretle (kira, faiz, temettü); özgürlüğe yalnızca pasif gelir sayılır.",
@@ -273,12 +273,12 @@ const I18N = {
     theme_vaporwave: "Vaporwave", theme_vaporwave_desc: "80 年代霓虹梦 · 美 学",
     more_soon: "更多功能即将推出 ✨",
     nav_portfolio: "投资组合",
-    portfolio_title: "你的投资组合", portfolio_sub: "添加你已持有的资产，看看你离财务自由有多近。",
+    portfolio_title: "你的投资组合", portfolio_sub: "添加你已持有的资产，查看它们的分布。",
     holding_ph: "持仓名称", add_holding: "+ 添加持仓", total_value: "投资组合总价值",
     target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
     income_line: "目前你的投资组合每月约可产生 {income}，覆盖你支出的 {pct}。",
     freedom_reached: "🎉 你已达到自由数字。你的投资可以覆盖你的支出！",
-    portfolio_empty: "在上方添加持仓以查看你的进度。",
+    portfolio_empty: "在上方添加持仓以查看资产分布。",
     portfolio_note: "自由目标 = 年支出 ÷ 所选收益率。被动收入 = 价值 × 收益率。仅为估算，非建议。",
     nav_income: "收入",
     income_title: "你的收入", income_sub: "添加你的每月收入。标记其中的被动收入（租金、利息、股息）；只有被动收入计入财务自由。",
@@ -398,12 +398,10 @@ const el = {
   portList: document.getElementById("portList"),
   addHolding: document.getElementById("addHolding"),
   portTotal: document.getElementById("portTotal"),
-  portChips: document.getElementById("portChips"),
-  portBlended: document.getElementById("portBlended"),
-  portPct: document.getElementById("portPct"),
-  portTarget: document.getElementById("portTarget"),
-  portBarFill: document.getElementById("portBarFill"),
-  portPunch: document.getElementById("portPunch"),
+  portChart: document.getElementById("portChart"),
+  portDonut: document.getElementById("portDonut"),
+  portLegend: document.getElementById("portLegend"),
+  portEmpty: document.getElementById("portEmpty"),
   // income view
   incList: document.getElementById("incList"),
   addIncome: document.getElementById("addIncome"),
@@ -864,55 +862,46 @@ function addHolding() {
   refreshPortfolio();
 }
 
-// Equal-weight blended return of the selected instruments.
-function blendedRate(cur) {
-  const sel = state.portfolio.target[cur];
-  if (!sel.length) return 0;
-  return sel.reduce((s, id) => s + (state.rates[cur][id] || 0), 0) / sel.length;
-}
-
-function buildPortfolioChips() {
-  const cur = state.currency;
-  const sel = state.portfolio.target[cur];
-  el.portChips.innerHTML = INSTRUMENTS[cur]
-    .map((inst) => {
-      const on = sel.includes(inst.id);
-      return `<button type="button" class="chip${on ? " is-on" : ""}" data-chip="${inst.id}" aria-pressed="${on}">${instName(inst.id)} <span class="chip-rate">${formatRate(state.rates[cur][inst.id])}</span></button>`;
-    })
-    .join("");
-  el.portChips.querySelectorAll("[data-chip]").forEach((b) => {
-    b.addEventListener("click", () => {
-      const arr = state.portfolio.target[cur];
-      const i = arr.indexOf(b.dataset.chip);
-      if (i >= 0) { if (arr.length > 1) arr.splice(i, 1); } // keep at least one selected
-      else arr.push(b.dataset.chip);
-      refreshPortfolio();
-    });
-  });
-}
+const PIE_COLORS = ["#7c5cff", "#21d4fd", "#2ee6a6", "#ffb454", "#ff7eb6", "#ffd54a", "#4f8cff", "#ff5ca8"];
+function escapeHtml(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
 function refreshPortfolio() {
-  const cur = state.currency, meta = CURRENCY_META[cur];
+  const meta = CURRENCY_META[state.currency];
   document.querySelectorAll("#view-portfolio .savings-symbol").forEach((s) => (s.textContent = meta.symbol));
 
   const total = state.portfolio.holdings.reduce((sum, h) => sum + (h.value || 0), 0);
   el.portTotal.textContent = formatMoney(total);
 
-  buildPortfolioChips();
-  const ratePct = blendedRate(cur);
-  el.portBlended.textContent = formatRate(ratePct);
-  const target = ratePct > 0 ? (state.monthlyExpenses * 12) / (ratePct / 100) : Infinity;
-  const pct = isFinite(target) && target > 0 ? (total / target) * 100 : 0;
-  const monthlyIncome = total * (ratePct / 100) / 12;
-  const coversPct = state.monthlyExpenses > 0 ? (monthlyIncome / state.monthlyExpenses) * 100 : 0;
+  const segs = state.portfolio.holdings.filter((h) => h.value > 0);
+  if (!segs.length) {
+    el.portChart.hidden = true;
+    el.portEmpty.hidden = false;
+    el.portDonut.innerHTML = "";
+    el.portLegend.innerHTML = "";
+    return;
+  }
+  el.portChart.hidden = false;
+  el.portEmpty.hidden = true;
 
-  el.portPct.textContent = Math.round(pct) + "%";
-  el.portTarget.textContent = isFinite(target) ? t("target_x", { x: formatMoney(target) }) : "—";
-  el.portBarFill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+  // Donut ring (each holding's share of the total)
+  let cum = 0;
+  const ring = segs
+    .map((h, i) => {
+      const pct = (h.value / total) * 100;
+      const circle = `<circle cx="21" cy="21" r="15.915" fill="none" stroke="${PIE_COLORS[i % PIE_COLORS.length]}" stroke-width="6" stroke-dasharray="${pct} ${100 - pct}" stroke-dashoffset="${25 - cum}" />`;
+      cum += pct;
+      return circle;
+    })
+    .join("");
+  el.portDonut.innerHTML = `<circle cx="21" cy="21" r="15.915" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" />${ring}`;
 
-  if (total <= 0) el.portPunch.textContent = t("portfolio_empty");
-  else if (pct >= 100) el.portPunch.textContent = t("freedom_reached");
-  else el.portPunch.textContent = t("income_line", { income: formatMoney(monthlyIncome), pct: Math.round(coversPct) + "%" });
+  el.portLegend.innerHTML = segs
+    .map((h, i) => {
+      const pct = Math.round((h.value / total) * 100);
+      const name = h.label && h.label.trim() ? escapeHtml(h.label.trim()) : t("holding_ph");
+      return `<div class="leg-item"><span class="leg-dot" style="background:${PIE_COLORS[i % PIE_COLORS.length]}"></span><span class="leg-name">${name}</span><span class="leg-val">${formatMoney(h.value)} · ${pct}%</span></div>`;
+    })
+    .join("");
 }
 
 // ============================================================

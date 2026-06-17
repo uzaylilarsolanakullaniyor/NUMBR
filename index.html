@@ -283,22 +283,11 @@
           <span class="savings-total-value" id="portTotal">—</span>
         </div>
 
-        <div class="port-mix">
-          <span class="port-mix-label" data-i18n="target_via">Freedom target via</span>
-          <div class="chips" id="portChips"></div>
-          <div class="blended-rate"><span data-i18n="blended_return">Blended return</span>: <strong id="portBlended">—</strong></div>
+        <div class="port-chart" id="portChart">
+          <div class="donut-wrap"><svg class="donut" id="portDonut" viewBox="0 0 42 42" role="img" aria-label="Portfolio allocation"></svg></div>
+          <div class="donut-legend" id="portLegend"></div>
         </div>
-
-        <div class="port-progress">
-          <div class="port-progress-head">
-            <span class="port-pct"><strong id="portPct">0%</strong> <small data-i18n="to_freedom">to financial freedom</small></span>
-            <span class="port-target" id="portTarget"></span>
-          </div>
-          <div class="port-bar"><div class="port-bar-fill" id="portBarFill"></div></div>
-        </div>
-
-        <p class="savings-punch" id="portPunch"></p>
-        <p class="savings-note" data-i18n="portfolio_note">Freedom target = yearly expenses ÷ chosen return. Passive income = value × return. Estimates, not advice.</p>
+        <p class="savings-note" id="portEmpty" data-i18n="portfolio_empty">Add your holdings above to see the breakdown.</p>
       </section>
     </div><!-- /view-portfolio -->
 

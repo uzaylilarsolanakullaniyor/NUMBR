@@ -620,6 +620,18 @@ body {
 .blended-rate { font-size: 13px; color: var(--text-dim); }
 .blended-rate strong { font-family: "Sora", sans-serif; color: var(--good); font-size: 15px; margin-left: 2px; }
 
+/* ---------- Portfolio donut ---------- */
+.port-chart { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.port-chart[hidden] { display: none; }
+.donut-wrap { flex: none; }
+.donut { width: 150px; height: 150px; display: block; }
+.donut circle { transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease; }
+.donut-legend { flex: 1; min-width: 190px; display: flex; flex-direction: column; gap: 10px; }
+.leg-item { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.leg-dot { width: 12px; height: 12px; border-radius: 4px; flex: none; }
+.leg-name { flex: 1; min-width: 0; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leg-val { color: var(--text-dim); font-size: 12.5px; white-space: nowrap; }
+
 /* ---------- Income ---------- */
 .inc-type {
   display: inline-block; margin-left: 8px; vertical-align: middle;
