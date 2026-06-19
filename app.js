@@ -58,6 +58,16 @@ const US_STOCKS = [
   { s: "LLY", n: "Eli Lilly" }, { s: "AVGO", n: "Broadcom" }, { s: "MU", n: "Micron" }, { s: "UBER", n: "Uber" },
   { s: "ABNB", n: "Airbnb" }, { s: "COIN", n: "Coinbase" }, { s: "PLTR", n: "Palantir" }, { s: "SHOP", n: "Shopify" },
   { s: "SPOT", n: "Spotify" }, { s: "BABA", n: "Alibaba" },
+  // ETFs
+  { s: "SPY", n: "SPDR S&P 500 ETF (SPY)" }, { s: "QQQ", n: "Invesco QQQ — Nasdaq 100 (QQQ)" },
+  { s: "VOO", n: "Vanguard S&P 500 ETF (VOO)" }, { s: "IVV", n: "iShares Core S&P 500 (IVV)" },
+  { s: "VTI", n: "Vanguard Total Stock Market (VTI)" }, { s: "DIA", n: "SPDR Dow Jones (DIA)" },
+  { s: "IWM", n: "iShares Russell 2000 (IWM)" }, { s: "VEA", n: "Vanguard Developed Markets (VEA)" },
+  { s: "VWO", n: "Vanguard Emerging Markets (VWO)" }, { s: "GLD", n: "SPDR Gold Shares (GLD)" },
+  { s: "SLV", n: "iShares Silver Trust (SLV)" }, { s: "ARKK", n: "ARK Innovation ETF (ARKK)" },
+  { s: "SCHD", n: "Schwab US Dividend (SCHD)" }, { s: "VYM", n: "Vanguard High Dividend (VYM)" },
+  { s: "XLK", n: "Technology Select Sector (XLK)" }, { s: "XLF", n: "Financial Select Sector (XLF)" },
+  { s: "XLE", n: "Energy Select Sector (XLE)" }, { s: "SMH", n: "VanEck Semiconductor (SMH)" },
 ];
 const BIST_STOCKS = [
   { s: "AKBNK", n: "Akbank" }, { s: "GARAN", n: "Garanti BBVA" }, { s: "ISCTR", n: "İş Bankası" }, { s: "YKBNK", n: "Yapı Kredi" },
@@ -1144,6 +1154,12 @@ async function loadGoldPrice() {
 }
 // Live stock price via Yahoo Finance (through a CORS proxy; works on the deployed site).
 async function fetchYahoo(symbol) {
+  // 1) Same-origin serverless function — reliable on the deployed (Vercel) site.
+  try {
+    const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}`);
+    if (r.ok) { const j = await r.json(); if (typeof j.price === "number") return j.price; }
+  } catch (e) { /* not deployed / local — fall back to public proxies */ }
+  // 2) Public CORS proxies (fallback, mainly for local preview).
   const y = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
   const proxies = [`https://api.allorigins.win/raw?url=${encodeURIComponent(y)}`, `https://corsproxy.io/?url=${encodeURIComponent(y)}`];
   for (const url of proxies) {
