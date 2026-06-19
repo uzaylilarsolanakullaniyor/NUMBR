@@ -41,11 +41,44 @@ const INCOME_CATEGORIES = [
   { id: "side", passive: false },
 ];
 // Portfolio holding asset types (tags). Interest-bearing ones feed Income.
-const ASSET_TYPES = ["stocks", "crypto", "deposit", "bonds", "gold", "cash"];
+const ASSET_TYPES = ["usstock", "bist", "crypto", "gold", "deposit", "bonds", "cash"];
+// Searchable company lists (symbol + display name). Prices fetched live from Yahoo.
+const US_STOCKS = [
+  { s: "AAPL", n: "Apple" }, { s: "MSFT", n: "Microsoft" }, { s: "GOOGL", n: "Alphabet (Google)" }, { s: "AMZN", n: "Amazon" },
+  { s: "NVDA", n: "NVIDIA" }, { s: "META", n: "Meta Platforms" }, { s: "TSLA", n: "Tesla" }, { s: "BRK-B", n: "Berkshire Hathaway" },
+  { s: "JPM", n: "JPMorgan Chase" }, { s: "V", n: "Visa" }, { s: "MA", n: "Mastercard" }, { s: "UNH", n: "UnitedHealth" },
+  { s: "HD", n: "Home Depot" }, { s: "PG", n: "Procter & Gamble" }, { s: "JNJ", n: "Johnson & Johnson" }, { s: "XOM", n: "Exxon Mobil" },
+  { s: "CVX", n: "Chevron" }, { s: "KO", n: "Coca-Cola" }, { s: "PEP", n: "PepsiCo" }, { s: "COST", n: "Costco" },
+  { s: "WMT", n: "Walmart" }, { s: "DIS", n: "Disney" }, { s: "NFLX", n: "Netflix" }, { s: "ADBE", n: "Adobe" },
+  { s: "CRM", n: "Salesforce" }, { s: "INTC", n: "Intel" }, { s: "AMD", n: "AMD" }, { s: "QCOM", n: "Qualcomm" },
+  { s: "ORCL", n: "Oracle" }, { s: "CSCO", n: "Cisco" }, { s: "IBM", n: "IBM" }, { s: "BA", n: "Boeing" },
+  { s: "F", n: "Ford" }, { s: "GM", n: "General Motors" }, { s: "NKE", n: "Nike" }, { s: "SBUX", n: "Starbucks" },
+  { s: "MCD", n: "McDonald's" }, { s: "PYPL", n: "PayPal" }, { s: "BAC", n: "Bank of America" }, { s: "GS", n: "Goldman Sachs" },
+  { s: "T", n: "AT&T" }, { s: "VZ", n: "Verizon" }, { s: "PFE", n: "Pfizer" }, { s: "MRK", n: "Merck" },
+  { s: "LLY", n: "Eli Lilly" }, { s: "AVGO", n: "Broadcom" }, { s: "MU", n: "Micron" }, { s: "UBER", n: "Uber" },
+  { s: "ABNB", n: "Airbnb" }, { s: "COIN", n: "Coinbase" }, { s: "PLTR", n: "Palantir" }, { s: "SHOP", n: "Shopify" },
+  { s: "SPOT", n: "Spotify" }, { s: "BABA", n: "Alibaba" },
+];
+const BIST_STOCKS = [
+  { s: "AKBNK", n: "Akbank" }, { s: "GARAN", n: "Garanti BBVA" }, { s: "ISCTR", n: "İş Bankası" }, { s: "YKBNK", n: "Yapı Kredi" },
+  { s: "VAKBN", n: "VakıfBank" }, { s: "HALKB", n: "Halkbank" }, { s: "THYAO", n: "Türk Hava Yolları" }, { s: "PGSUS", n: "Pegasus" },
+  { s: "BIMAS", n: "BİM" }, { s: "MGROS", n: "Migros" }, { s: "SOKM", n: "Şok Marketler" }, { s: "ASELS", n: "Aselsan" },
+  { s: "KCHOL", n: "Koç Holding" }, { s: "SAHOL", n: "Sabancı Holding" }, { s: "EREGL", n: "Ereğli Demir Çelik" }, { s: "KRDMD", n: "Kardemir" },
+  { s: "SISE", n: "Şişecam" }, { s: "TUPRS", n: "Tüpraş" }, { s: "PETKM", n: "Petkim" }, { s: "SASA", n: "Sasa Polyester" },
+  { s: "FROTO", n: "Ford Otosan" }, { s: "TOASO", n: "Tofaş" }, { s: "DOAS", n: "Doğuş Otomotiv" }, { s: "TTRAK", n: "Türk Traktör" },
+  { s: "OTKAR", n: "Otokar" }, { s: "ARCLK", n: "Arçelik" }, { s: "VESTL", n: "Vestel" }, { s: "TCELL", n: "Turkcell" },
+  { s: "TTKOM", n: "Türk Telekom" }, { s: "ENKAI", n: "Enka İnşaat" }, { s: "TKFEN", n: "Tekfen Holding" }, { s: "ALARK", n: "Alarko Holding" },
+  { s: "ENJSA", n: "Enerjisa" }, { s: "AKSEN", n: "Aksa Enerji" }, { s: "ZOREN", n: "Zorlu Enerji" }, { s: "ODAS", n: "Odaş Elektrik" },
+  { s: "KOZAL", n: "Koza Altın" }, { s: "KOZAA", n: "Koza Madencilik" }, { s: "GUBRF", n: "Gübretaş" }, { s: "HEKTS", n: "Hektaş" },
+  { s: "OYAKC", n: "Oyak Çimento" }, { s: "CIMSA", n: "Çimsa" }, { s: "AEFES", n: "Anadolu Efes" }, { s: "CCOLA", n: "Coca-Cola İçecek" },
+  { s: "ULKER", n: "Ülker" }, { s: "TAVHL", n: "TAV Havalimanları" }, { s: "EKGYO", n: "Emlak Konut GYO" }, { s: "ASTOR", n: "Astor Enerji" },
+  { s: "BRSAN", n: "Borusan Boru" }, { s: "SMRTG", n: "Smart Güneş" }, { s: "GWIND", n: "Galata Wind" }, { s: "REEDR", n: "Reeder" },
+];
 const WITHHOLD_PCT = 15; // approx. withholding tax (stopaj) on deposit/bond interest
 let cryptoMarkets = []; // top coins for the active currency: [{ id, symbol, name, price }]
 let goldPriceGram = 0; // per-gram gold price in the active currency
 const GRAMS_PER_OZ = 31.1034768;
+let usdTry = 0; // TRY per 1 USD (for converting stock prices to the active currency)
 
 // ============================================================
 //  i18n dictionary
@@ -104,7 +137,8 @@ const I18N = {
     flow_title: "Monthly cash flow", flow_income: "Income", flow_expenses: "Expenses", flow_net: "Net / month",
     flow_savings_note: "+{x}/month more if you cut your tracked spending.",
     cat_cash: "Cash", cat_investment: "Investment",
-    asset_stocks: "Stocks", asset_crypto: "Crypto", asset_deposit: "Deposit", asset_bonds: "Bonds", asset_realestate: "Real estate", asset_gold: "Gold", asset_cash: "Cash",
+    asset_stocks: "Stocks", asset_usstock: "US Stocks", asset_bist: "Turkish (BIST)", asset_crypto: "Crypto", asset_deposit: "Deposit", asset_bonds: "Bonds", asset_realestate: "Real estate", asset_gold: "Gold", asset_cash: "Cash",
+    stock_search_ph: "Search stock (e.g. Apple)", shares_ph: "Shares",
     inc_from_portfolio: "+{x}/mo from portfolio",
     net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams",
     target_via: "Freedom target via (pick one or more)", target_x: "Target {x}", to_freedom: "to financial freedom", blended_return: "Blended return",
@@ -200,7 +234,8 @@ const I18N = {
     flow_title: "Aylık nakit akışı", flow_income: "Gelir", flow_expenses: "Gider", flow_net: "Aylık net",
     flow_savings_note: "Takip ettiğin harcamaları kısarsan ayda +{x} daha.",
     cat_cash: "Nakit", cat_investment: "Yatırım",
-    asset_stocks: "Hisse", asset_crypto: "Kripto", asset_deposit: "Mevduat", asset_bonds: "Tahvil", asset_realestate: "Gayrimenkul", asset_gold: "Altın", asset_cash: "Nakit",
+    asset_stocks: "Hisse", asset_usstock: "ABD Hisse", asset_bist: "Türk Hisse (BIST)", asset_crypto: "Kripto", asset_deposit: "Mevduat", asset_bonds: "Tahvil", asset_realestate: "Gayrimenkul", asset_gold: "Altın", asset_cash: "Nakit",
+    stock_search_ph: "Hisse ara (örn. THY)", shares_ph: "Adet",
     inc_from_portfolio: "+{x}/ay portföyden",
     net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram",
     target_via: "Özgürlük hedefi (bir veya birkaçını seç)", target_x: "Hedef {x}", to_freedom: "finansal özgürlüğe", blended_return: "Karma getiri",
@@ -239,7 +274,7 @@ const I18N = {
       subscriptions_hint: "Netflix, Spotify, YouTube Premium vb.",
       eatingout: "Dışarıda yemek / restoran", delivery: "Yemek siparişi", coffee: "Günlük kahve",
       gaming: "Oyun abonelikleri + oyun içi harcama", fuel: "Yakıt harcamaları",
-      shopping: "Dürtüsel / hızlı moda alışveriş",
+      shopping: "Alışveriş",
     },
   },
 
@@ -296,7 +331,8 @@ const I18N = {
     flow_title: "每月现金流", flow_income: "收入", flow_expenses: "支出", flow_net: "每月净额",
     flow_savings_note: "如果削减你记录的开支，每月可多 +{x}。",
     cat_cash: "现金", cat_investment: "投资",
-    asset_stocks: "股票", asset_crypto: "加密货币", asset_deposit: "存款", asset_bonds: "债券", asset_realestate: "房地产", asset_gold: "黄金", asset_cash: "现金",
+    asset_stocks: "股票", asset_usstock: "美股", asset_bist: "土耳其股票 (BIST)", asset_crypto: "加密货币", asset_deposit: "存款", asset_bonds: "债券", asset_realestate: "房地产", asset_gold: "黄金", asset_cash: "现金",
+    stock_search_ph: "搜索股票（如 Apple）", shares_ph: "股数",
     inc_from_portfolio: "+{x}/月 来自投资组合",
     net_tax: "净额（−15% 税）", coin_search_ph: "搜索币种（如 Solana）", qty_ph: "数量", coin_loading: "正在加载实时价格…", grams_ph: "克",
     target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
@@ -335,7 +371,7 @@ const I18N = {
       subscriptions_hint: "Netflix、Spotify、YouTube Premium 等",
       eatingout: "外出就餐 / 餐厅", delivery: "外卖", coffee: "每日咖啡",
       gaming: "游戏订阅 + 游戏内购买", fuel: "燃油 / 加油",
-      shopping: "冲动 / 快时尚购物",
+      shopping: "购物",
     },
   },
 };
@@ -369,7 +405,7 @@ const state = {
 SAVINGS_CATEGORIES.forEach((id) => { state.savings.amounts[id] = 0; state.savings.on[id] = true; });
 INCOME_CATEGORIES.forEach((c) => { state.income.amounts[c.id] = 0; state.income.passive[c.id] = c.passive; });
 // start with a few empty holding rows (no preset values)
-[0, 1, 2].forEach(() => state.portfolio.holdings.push({ id: "h" + ++state.portfolio.seq, label: "", value: 0, assetType: "stocks" }));
+[0, 1, 2].forEach(() => state.portfolio.holdings.push({ id: "h" + ++state.portfolio.seq, label: "", value: 0, assetType: "usstock" }));
 
 // ---- i18n helpers ----
 function L() { return I18N[state.lang] || I18N.en; }
@@ -866,6 +902,65 @@ function wireRemove(row, id) {
     refreshIncome();
   });
 }
+function fmtPrice(n) { return Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 }); }
+function updateStockValue(row, id, loading) {
+  const x = holdById(id);
+  const node = row.querySelector("[data-stock-value]");
+  if (!node || !x) return;
+  if (loading) { node.innerHTML = `<small>${t("coin_loading")}</small>`; return; }
+  const ccy = x.assetType === "bist" ? "₺" : "$";
+  if (x.nativePrice && x.shares) node.innerHTML = `${formatMoney(stockValue(x))} <small>${x.shares} @ ${ccy}${fmtPrice(x.nativePrice)}</small>`;
+  else if (x.nativePrice) node.innerHTML = `<small>@ ${ccy}${fmtPrice(x.nativePrice)}</small>`;
+  else if (x.symbol) node.innerHTML = `<small>${x.symbol}</small>`;
+  else node.textContent = "";
+}
+function wireStockRow(row, id, type) {
+  wireTypeSelect(row, id);
+  wireRemove(row, id);
+  const list = type === "bist" ? BIST_STOCKS : US_STOCKS;
+  const search = row.querySelector("[data-stock-search]");
+  const dd = row.querySelector("[data-stock-dd]");
+  const sh = row.querySelector("[data-stock-shares]");
+  function renderDropdown(q) {
+    const ql = (q || "").trim().toLowerCase();
+    const matches = (ql ? list.filter((s) => s.n.toLowerCase().includes(ql) || s.s.toLowerCase().includes(ql)) : list).slice(0, 8);
+    if (!matches.length) { dd.hidden = true; return; }
+    dd.innerHTML = matches.map((s) => `<button type="button" class="coin-opt" data-stk="${s.s}">${escapeHtml(s.n)} <span>${s.s}</span></button>`).join("");
+    dd.hidden = false;
+    dd.querySelectorAll("[data-stk]").forEach((b) =>
+      b.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        const item = list.find((s) => s.s === b.dataset.stk);
+        const x = holdById(id);
+        x.symbol = item.s; x.stockName = item.n; x.label = item.n; x.nativePrice = 0;
+        search.value = item.n; dd.hidden = true;
+        updateStockValue(row, id, true); // show loading
+        const ys = type === "bist" ? item.s + ".IS" : item.s;
+        getStockPrice(ys).then((p) => {
+          const y = holdById(id);
+          if (!y || y.symbol !== item.s) return;
+          if (p != null) y.nativePrice = p;
+          y.value = stockValue(y);
+          updateStockValue(row, id);
+          refreshPortfolio(); refreshIncome();
+        });
+        x.value = stockValue(x);
+        refreshPortfolio(); refreshIncome();
+      })
+    );
+  }
+  search.addEventListener("input", () => renderDropdown(search.value));
+  search.addEventListener("focus", () => renderDropdown(search.value));
+  search.addEventListener("blur", () => setTimeout(() => { dd.hidden = true; }, 150));
+  sh.addEventListener("input", () => {
+    const x = holdById(id);
+    x.shares = parseNumber(sh.value);
+    x.value = stockValue(x);
+    updateStockValue(row, id);
+    refreshPortfolio(); refreshIncome();
+  });
+  updateStockValue(row, id);
+}
 function updateGoldValue(row, id) {
   const x = holdById(id);
   const node = row.querySelector("[data-gold-value]");
@@ -932,7 +1027,23 @@ function makeHoldingRow(id) {
   const options = ASSET_TYPES.map((tp) => `<option value="${tp}" ${tp === at ? "selected" : ""}>${t("asset_" + tp)}</option>`).join("");
   const typeSelect = `<select class="hold-type" data-hold-type="${id}" aria-label="asset type">${options}</select>`;
 
-  if (at === "crypto") {
+  if (at === "usstock" || at === "bist") {
+    const stockName = h.stockName ? h.stockName.replace(/"/g, "&quot;") : "";
+    row.innerHTML = `
+      <div class="port-namecell">
+        <div class="coin-search">
+          <input class="cat-name" type="text" autocomplete="off" data-stock-search="${id}" value="${stockName}" placeholder="${t("stock_search_ph")}" />
+          <div class="coin-dropdown" data-stock-dd="${id}" hidden></div>
+        </div>
+        ${typeSelect}
+      </div>
+      <div class="crypto-cell">
+        <input class="qty-field" type="text" inputmode="decimal" data-stock-shares="${id}" value="${h.shares ? h.shares : ""}" placeholder="${t("shares_ph")}" />
+        <div class="crypto-value" data-stock-value="${id}"></div>
+      </div>
+      <button class="cat-remove" type="button" data-hold-del="${id}" aria-label="remove">×</button>`;
+    wireStockRow(row, id, at);
+  } else if (at === "crypto") {
     const coinName = h.coinName ? h.coinName.replace(/"/g, "&quot;") : "";
     row.innerHTML = `
       <div class="port-namecell">
@@ -1031,18 +1142,63 @@ async function loadGoldPrice() {
     if (oz) { goldPriceGram = oz / GRAMS_PER_OZ; try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v: goldPriceGram })); } catch (e) {} }
   } catch (e) { /* offline / local — works once deployed */ }
 }
+// Live stock price via Yahoo Finance (through a CORS proxy; works on the deployed site).
+async function fetchYahoo(symbol) {
+  const y = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+  const proxies = [`https://api.allorigins.win/raw?url=${encodeURIComponent(y)}`, `https://corsproxy.io/?url=${encodeURIComponent(y)}`];
+  for (const url of proxies) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const j = await res.json();
+      const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+      if (m && typeof m.regularMarketPrice === "number") return m.regularMarketPrice;
+    } catch (e) { /* try next proxy */ }
+  }
+  return null;
+}
+async function getStockPrice(yahooSymbol) {
+  const key = "numbr_stk_" + yahooSymbol;
+  try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) return c.v; } catch (e) {}
+  const v = await fetchYahoo(yahooSymbol);
+  if (v != null) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) {} }
+  return v;
+}
+async function loadUsdTry() {
+  const key = "numbr_usdtry";
+  try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) { usdTry = c.v; return; } } catch (e) {}
+  const v = await fetchYahoo("TRY=X");
+  if (v) { usdTry = v; try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) {} }
+}
+// Convert a stock's native-currency value into the app's active currency.
+function stockValue(h) {
+  const native = h.nativePrice || 0;
+  const shares = h.shares || 0;
+  const nativeCcy = h.assetType === "bist" ? "TRY" : "USD";
+  const appCcy = state.currency === "TL" ? "TRY" : "USD";
+  let fx = 1;
+  if (nativeCcy !== appCcy) fx = appCcy === "TRY" ? usdTry : (usdTry ? 1 / usdTry : 0);
+  return shares * native * fx;
+}
+
 async function refreshCryptoPrices() {
   await loadCryptoMarkets();
   await loadGoldPrice();
-  state.portfolio.holdings.forEach((h) => {
+  await loadUsdTry();
+  for (const h of state.portfolio.holdings) {
     if (h.assetType === "crypto" && h.coinId) {
       const m = cryptoMarkets.find((x) => x.id === h.coinId);
       if (m) { h.price = m.price; h.value = (h.qty || 0) * m.price; }
     } else if (h.assetType === "gold" && goldPriceGram > 0) {
       h.price = goldPriceGram;
       h.value = (h.grams || 0) * goldPriceGram;
+    } else if ((h.assetType === "usstock" || h.assetType === "bist") && h.symbol) {
+      const ys = h.assetType === "bist" ? h.symbol + ".IS" : h.symbol;
+      const p = await getStockPrice(ys);
+      if (p != null) h.nativePrice = p;
+      h.value = stockValue(h);
     }
-  });
+  }
   buildPortfolio();
   refreshPortfolio();
   refreshIncome();
@@ -1050,7 +1206,7 @@ async function refreshCryptoPrices() {
 
 function addHolding() {
   const id = "h" + ++state.portfolio.seq;
-  state.portfolio.holdings.push({ id, label: "", value: 0, assetType: "stocks" });
+  state.portfolio.holdings.push({ id, label: "", value: 0, assetType: "usstock" });
   const row = makeHoldingRow(id);
   el.portList.appendChild(row);
   const nameInput = row.querySelector("[data-hold-name]");
@@ -1396,6 +1552,12 @@ function loadState() {
   if (s.savings) state.savings = s.savings;
   if (s.income) state.income = s.income;
   if (s.portfolio) state.portfolio = s.portfolio;
+  // normalize any legacy/removed asset types from older saves
+  if (state.portfolio && Array.isArray(state.portfolio.holdings)) {
+    state.portfolio.holdings.forEach((h) => {
+      if (!ASSET_TYPES.includes(h.assetType)) h.assetType = h.assetType === "stocks" ? "usstock" : "cash";
+    });
+  }
 }
 
 // ---- Init ----
