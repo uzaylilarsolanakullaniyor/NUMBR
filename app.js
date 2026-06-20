@@ -89,6 +89,7 @@ let cryptoMarkets = []; // top coins for the active currency: [{ id, symbol, nam
 let goldPriceGram = 0; // per-gram gold price in the active currency
 const GRAMS_PER_OZ = 31.1034768;
 let usdTry = 0; // TRY per 1 USD (for converting stock prices to the active currency)
+let watchData = {}; // key -> { price, ccy, chg24, chg1mo, chg1y } for watchlist items
 
 // ============================================================
 //  i18n dictionary
@@ -149,6 +150,9 @@ const I18N = {
     cat_cash: "Cash", cat_investment: "Investment",
     asset_stocks: "Stocks", asset_usstock: "US Stocks", asset_bist: "Turkish (BIST)", asset_crypto: "Crypto", asset_deposit: "Deposit", asset_bonds: "Bonds", asset_realestate: "Real estate", asset_gold: "Gold", asset_cash: "Cash",
     stock_search_ph: "Search stock (e.g. Apple)", shares_ph: "Shares",
+    nav_watchlist: "Watch", watch_title: "Watchlist", watch_sub: "Search and favorite assets to track their price and performance.",
+    watch_search_ph: "Search gold, stocks, crypto…", watch_empty: "Search above and tap to add assets to your watchlist.",
+    lbl_24h: "24h", lbl_1mo: "1M", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/mo from portfolio",
     net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams",
     target_via: "Freedom target via (pick one or more)", target_x: "Target {x}", to_freedom: "to financial freedom", blended_return: "Blended return",
@@ -246,6 +250,9 @@ const I18N = {
     cat_cash: "Nakit", cat_investment: "Yatırım",
     asset_stocks: "Hisse", asset_usstock: "ABD Hisse", asset_bist: "Türk Hisse (BIST)", asset_crypto: "Kripto", asset_deposit: "Mevduat", asset_bonds: "Tahvil", asset_realestate: "Gayrimenkul", asset_gold: "Altın", asset_cash: "Nakit",
     stock_search_ph: "Hisse ara (örn. THY)", shares_ph: "Adet",
+    nav_watchlist: "Takip", watch_title: "Takip Listesi", watch_sub: "Varlık ara ve favorile; fiyatını ve performansını takip et.",
+    watch_search_ph: "Altın, hisse, kripto ara…", watch_empty: "Yukarıdan ara ve takip listene varlık ekle.",
+    lbl_24h: "24s", lbl_1mo: "1A", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/ay portföyden",
     net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram",
     target_via: "Özgürlük hedefi (bir veya birkaçını seç)", target_x: "Hedef {x}", to_freedom: "finansal özgürlüğe", blended_return: "Karma getiri",
@@ -343,6 +350,9 @@ const I18N = {
     cat_cash: "现金", cat_investment: "投资",
     asset_stocks: "股票", asset_usstock: "美股", asset_bist: "土耳其股票 (BIST)", asset_crypto: "加密货币", asset_deposit: "存款", asset_bonds: "债券", asset_realestate: "房地产", asset_gold: "黄金", asset_cash: "现金",
     stock_search_ph: "搜索股票（如 Apple）", shares_ph: "股数",
+    nav_watchlist: "关注", watch_title: "关注列表", watch_sub: "搜索并收藏资产，跟踪其价格和表现。",
+    watch_search_ph: "搜索黄金、股票、加密货币…", watch_empty: "在上方搜索并点击，将资产加入关注列表。",
+    lbl_24h: "24h", lbl_1mo: "1月", lbl_1yr: "1年",
     inc_from_portfolio: "+{x}/月 来自投资组合",
     net_tax: "净额（−15% 税）", coin_search_ph: "搜索币种（如 Solana）", qty_ph: "数量", coin_loading: "正在加载实时价格…", grams_ph: "克",
     target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
@@ -410,6 +420,7 @@ const state = {
     holdings: [], seq: 0,
     target: { USD: [SAVINGS_DEFAULT_INVEST.USD], TL: [SAVINGS_DEFAULT_INVEST.TL] },
   },
+  watchlist: [], // [{ type, key, name }] — assets to monitor (price + 24h/1mo/1yr performance)
   income: { amounts: {}, passive: {}, custom: [], seq: 0 },
 };
 SAVINGS_CATEGORIES.forEach((id) => { state.savings.amounts[id] = 0; state.savings.on[id] = true; });
@@ -486,6 +497,11 @@ const el = {
   incBarFill: document.getElementById("incBarFill"),
   incPunch: document.getElementById("incPunch"),
   incSurplus: document.getElementById("incSurplus"),
+  // watchlist view
+  watchSearch: document.getElementById("watchSearch"),
+  watchDd: document.getElementById("watchDd"),
+  watchList: document.getElementById("watchList"),
+  watchEmpty: document.getElementById("watchEmpty"),
 };
 
 // ---- Helpers ----
@@ -1173,6 +1189,31 @@ async function fetchYahoo(symbol) {
   }
   return null;
 }
+function parseYahooChart(j) {
+  const r0 = j && j.chart && j.chart.result && j.chart.result[0];
+  if (!r0) return null;
+  const meta = r0.meta;
+  const closes = (r0.indicators && r0.indicators.quote && r0.indicators.quote[0] && r0.indicators.quote[0].close) || [];
+  const valid = closes.filter((c) => typeof c === "number");
+  const price = meta && typeof meta.regularMarketPrice === "number" ? meta.regularMarketPrice : (valid.length ? valid[valid.length - 1] : null);
+  if (price == null) return null;
+  // previous *daily* close (yesterday) for the 24h move — chartPreviousClose is ~1y ago on a 1y range
+  const prev = valid.length >= 2 ? valid[valid.length - 2] : (meta && (meta.chartPreviousClose || meta.previousClose));
+  const pct = (a, b) => (a != null && b ? (a / b - 1) * 100 : null);
+  return { price, ccy: meta ? meta.currency : null, chg24: pct(price, prev), chg1mo: valid.length > 22 ? pct(price, valid[valid.length - 22]) : null, chg1y: valid.length ? pct(price, valid[0]) : null };
+}
+// Full quote (price + 24h/1mo/1yr %) — serverless first, public proxy fallback.
+async function fetchStockData(symbol) {
+  try {
+    const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&range=1y`);
+    if (r.ok) { const j = await r.json(); if (typeof j.price === "number") return { price: j.price, ccy: j.currency, chg24: j.chg24, chg1mo: j.chg1mo, chg1y: j.chg1y }; }
+  } catch (e) {}
+  const y = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`;
+  for (const url of [`https://api.allorigins.win/raw?url=${encodeURIComponent(y)}`, `https://corsproxy.io/?url=${encodeURIComponent(y)}`]) {
+    try { const res = await fetch(url); if (!res.ok) continue; const d = parseYahooChart(await res.json()); if (d) return d; } catch (e) {}
+  }
+  return null;
+}
 async function getStockPrice(yahooSymbol) {
   const key = "numbr_stk_" + yahooSymbol;
   try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) return c.v; } catch (e) {}
@@ -1452,6 +1493,101 @@ function refreshIncome() {
 }
 
 // ============================================================
+//  Watchlist
+// ============================================================
+function watchSearchPool() {
+  const pool = [{ type: "gold", key: "gold", name: t("asset_gold"), sym: "XAU", tag: t("asset_gold") }];
+  US_STOCKS.forEach((s) => pool.push({ type: "usstock", key: s.s, name: s.n, sym: s.s, tag: t("asset_usstock") }));
+  BIST_STOCKS.forEach((s) => pool.push({ type: "bist", key: s.s, name: s.n, sym: s.s, tag: t("asset_bist") }));
+  cryptoMarkets.forEach((c) => pool.push({ type: "crypto", key: c.id, name: c.name, sym: c.symbol, tag: t("asset_crypto") }));
+  return pool;
+}
+function addWatch(item) {
+  if (state.watchlist.some((w) => w.type === item.type && w.key === item.key)) return;
+  state.watchlist.push({ type: item.type, key: item.key, name: item.name, sym: item.sym });
+  buildWatchlist(); saveState(); refreshWatchData();
+}
+function removeWatch(type, key) {
+  state.watchlist = state.watchlist.filter((w) => !(w.type === type && w.key === key));
+  buildWatchlist(); saveState();
+}
+function chgHtml(label, v) {
+  if (v == null || isNaN(v)) return `<span class="perf-chip"><span class="perf-lbl">${label}</span> <b>—</b></span>`;
+  return `<span class="perf-chip ${v >= 0 ? "up" : "down"}"><span class="perf-lbl">${label}</span> <b>${v >= 0 ? "+" : ""}${v.toFixed(1)}%</b></span>`;
+}
+function watchPriceLabel(w) {
+  const d = watchData[w.key];
+  if (!d || d.price == null) return "…";
+  if (w.type === "usstock") return "$" + fmtPrice(d.price);
+  if (w.type === "bist") return "₺" + fmtPrice(d.price);
+  const sym = state.currency === "TL" ? "₺" : "$";
+  return sym + fmtPrice(d.price) + (w.type === "gold" ? "/g" : "");
+}
+function buildWatchlist() {
+  if (el.watchSearch) el.watchSearch.placeholder = t("watch_search_ph");
+  if (!state.watchlist.length) { el.watchList.innerHTML = ""; el.watchEmpty.hidden = false; return; }
+  el.watchEmpty.hidden = true;
+  el.watchList.innerHTML = state.watchlist.map((w) => {
+    const d = watchData[w.key] || {};
+    return `<div class="watch-row">
+      <div class="watch-top">
+        <div class="watch-name">${escapeHtml(w.name)} <small>${escapeHtml((w.sym || "").toUpperCase())}</small></div>
+        <div class="watch-price">${watchPriceLabel(w)}</div>
+      </div>
+      <div class="watch-perf">
+        ${chgHtml(t("lbl_24h"), d.chg24)}${chgHtml(t("lbl_1mo"), d.chg1mo)}${chgHtml(t("lbl_1yr"), d.chg1y)}
+        <button class="watch-del" type="button" data-wdel="${w.type}|${w.key}" aria-label="remove">×</button>
+      </div>
+    </div>`;
+  }).join("");
+  el.watchList.querySelectorAll("[data-wdel]").forEach((b) => b.addEventListener("click", () => {
+    const idx = b.dataset.wdel.indexOf("|");
+    removeWatch(b.dataset.wdel.slice(0, idx), b.dataset.wdel.slice(idx + 1));
+  }));
+}
+async function refreshWatchData() {
+  if (!state.watchlist.length) return;
+  const vs = state.currency === "TL" ? "try" : "usd";
+  const ids = state.watchlist.filter((w) => w.type === "crypto").map((w) => w.key);
+  if (state.watchlist.some((w) => w.type === "gold")) ids.push("pax-gold");
+  if (ids.length) {
+    try {
+      const r = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${vs}&ids=${ids.join(",")}&price_change_percentage=24h,30d,1y`);
+      if (r.ok) {
+        (await r.json()).forEach((c) => {
+          const d = { price: c.current_price, chg24: c.price_change_percentage_24h_in_currency, chg1mo: c.price_change_percentage_30d_in_currency, chg1y: c.price_change_percentage_1y_in_currency };
+          if (c.id === "pax-gold") watchData["gold"] = Object.assign({}, d, { price: c.current_price / GRAMS_PER_OZ });
+          else watchData[c.id] = d;
+        });
+      }
+    } catch (e) {}
+  }
+  for (const w of state.watchlist) {
+    if (w.type === "usstock" || w.type === "bist") {
+      const d = await fetchStockData(w.type === "bist" ? w.key + ".IS" : w.key);
+      if (d) watchData[w.key] = d;
+    }
+  }
+  buildWatchlist();
+}
+function wireWatchSearch() {
+  const search = el.watchSearch, dd = el.watchDd;
+  if (!search) return;
+  function render(q) {
+    const ql = (q || "").trim().toLowerCase();
+    if (!ql) { dd.hidden = true; return; }
+    const matches = watchSearchPool().filter((p) => p.name.toLowerCase().includes(ql) || (p.sym || "").toLowerCase().includes(ql)).slice(0, 10);
+    if (!matches.length) { dd.hidden = true; return; }
+    dd.innerHTML = matches.map((p, i) => `<button type="button" class="coin-opt" data-wi="${i}">${escapeHtml(p.name)} <span>${escapeHtml(p.sym || "")} · ${escapeHtml(p.tag)}</span></button>`).join("");
+    dd.hidden = false;
+    dd.querySelectorAll("[data-wi]").forEach((b) => b.addEventListener("mousedown", (e) => { e.preventDefault(); addWatch(matches[+b.dataset.wi]); search.value = ""; dd.hidden = true; }));
+  }
+  search.addEventListener("input", () => render(search.value));
+  search.addEventListener("focus", () => render(search.value));
+  search.addEventListener("blur", () => setTimeout(() => { dd.hidden = true; }, 150));
+}
+
+// ============================================================
 //  Language + Theme
 // ============================================================
 function applyLanguage(lang) {
@@ -1463,6 +1599,7 @@ function applyLanguage(lang) {
   buildSavings(); refreshSavings();
   buildPortfolio(); refreshPortfolio();
   buildIncome(); refreshIncome();
+  buildWatchlist();
   updateSettingsActive();
   try { localStorage.setItem("numbr_lang", lang); } catch (e) {}
 }
@@ -1485,6 +1622,7 @@ function setCurrency(cur) {
   el.inflation.value = formatRate(state.inflation[cur], false);
   buildLayout(); refresh(); refreshSavings(); refreshPortfolio(); refreshIncome();
   refreshCryptoPrices(); // refetch crypto prices in the new currency
+  buildWatchlist(); refreshWatchData();
   updateSettingsActive();
   try { localStorage.setItem("numbr_currency", cur); } catch (e) {}
 }
@@ -1525,10 +1663,12 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
     document.getElementById("view-settings").hidden = name !== "settings";
     document.getElementById("view-portfolio").hidden = name !== "portfolio";
     document.getElementById("view-income").hidden = name !== "income";
+    document.getElementById("view-watch").hidden = name !== "watch";
     document.querySelector(".brand").hidden = name !== "home"; // logo only on Home
     if (name === "savings") refreshSavings();
     if (name === "portfolio") refreshPortfolio();
     if (name === "income") refreshIncome();
+    if (name === "watch") refreshWatchData();
     window.scrollTo({ top: 0, behavior: "auto" });
   }
   tabs.forEach((tab) => {
@@ -1549,7 +1689,7 @@ function saveState() {
       lang: state.lang, theme: state.theme, currency: state.currency,
       monthlyExpenses: state.monthlyExpenses, realMode: state.realMode,
       inflation: state.inflation, rates: state.rates, realEstate: state.realEstate,
-      savings: state.savings, income: state.income, portfolio: state.portfolio,
+      savings: state.savings, income: state.income, portfolio: state.portfolio, watchlist: state.watchlist,
     }));
   } catch (e) {}
 }
@@ -1568,6 +1708,7 @@ function loadState() {
   if (s.savings) state.savings = s.savings;
   if (s.income) state.income = s.income;
   if (s.portfolio) state.portfolio = s.portfolio;
+  if (Array.isArray(s.watchlist)) state.watchlist = s.watchlist;
   // normalize any legacy/removed asset types from older saves
   if (state.portfolio && Array.isArray(state.portfolio.holdings)) {
     state.portfolio.holdings.forEach((h) => {
@@ -1591,4 +1732,6 @@ el.expenses.value = formatThousands(state.monthlyExpenses);
 el.inflation.value = formatRate(state.inflation[state.currency], false);
 applyTheme(state.theme);
 applyLanguage(state.lang); // builds layout + savings, applies all translations
+wireWatchSearch();
 refreshCryptoPrices(); // fetch live crypto prices (works on the deployed site)
+refreshWatchData(); // fetch performance for any saved watchlist items
