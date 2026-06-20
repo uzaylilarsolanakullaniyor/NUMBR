@@ -1238,3 +1238,43 @@ body {
 [data-theme="vaporwave"] .tab { color: #cdb8e8; }
 [data-theme="vaporwave"] .tab.is-active { color: #fff; background: linear-gradient(135deg, rgba(255, 60, 214, 0.4), rgba(43, 240, 255, 0.3)); box-shadow: 0 0 14px rgba(255, 60, 214, 0.5); }
 [data-theme="vaporwave"] .toast { background: rgba(26, 11, 46, 0.92); color: #fff; border: 1px solid #ff3ca0; }
+
+/* ============ First-run onboarding overlay ============ */
+.onboard {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center; padding: 22px;
+  background: rgba(3, 4, 8, 0.72);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  animation: ob-fade 0.25s ease both;
+}
+.onboard[hidden] { display: none; }
+.onboard-card {
+  width: 100%; max-width: 440px; padding: 28px 24px;
+  max-height: calc(100vh - 44px); overflow-y: auto;
+  animation: ob-rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.onboard-logo { font-size: 40px; text-align: center; line-height: 1; }
+.onboard-title {
+  margin: 14px 0 6px; text-align: center; font-size: 24px; font-weight: 800;
+  font-family: "Sora", sans-serif;
+}
+.onboard-sub { margin: 0 0 20px; text-align: center; color: var(--text-dim); font-size: 14.5px; line-height: 1.5; }
+.onboard-group { margin-bottom: 18px; }
+.onboard-label {
+  margin: 0 0 10px; font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--text-faint); font-weight: 700;
+}
+.onboard-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.ob-country, .ob-lang { flex: 1; min-width: 130px; justify-content: center; font-size: 16px; font-weight: 600; }
+.onboard-start {
+  width: 100%; margin-top: 6px; padding: 15px 16px;
+  border: none; border-radius: 14px; cursor: pointer;
+  color: #fff; font: inherit; font-size: 17px; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.2s ease;
+}
+.onboard-start:hover { box-shadow: 0 10px 30px rgba(124, 92, 255, 0.5); }
+.onboard-start:active { transform: scale(0.99); }
+@keyframes ob-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ob-rise { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }

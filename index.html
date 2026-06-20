@@ -193,10 +193,10 @@
       </div>
 
       <section class="glass settings-group">
-        <h3 class="settings-label" data-i18n="currency">Currency</h3>
+        <h3 class="settings-label" data-i18n="country">Country</h3>
         <div class="settings-options settings-options--lang">
-          <button class="opt opt-cur" type="button" data-currency="USD"><span class="opt-name">🇺🇸 USD</span></button>
-          <button class="opt opt-cur" type="button" data-currency="TL"><span class="opt-name">🇹🇷 TL</span></button>
+          <button class="opt opt-cur" type="button" data-currency="USD"><span class="opt-name">🇺🇸 USA · USD</span></button>
+          <button class="opt opt-cur" type="button" data-currency="TL"><span class="opt-name">🇹🇷 Türkiye · TL</span></button>
         </div>
       </section>
 
@@ -205,7 +205,6 @@
         <div class="settings-options settings-options--lang">
           <button class="opt opt-lang" type="button" data-lang="tr"><span class="opt-name">Türkçe</span></button>
           <button class="opt opt-lang" type="button" data-lang="en"><span class="opt-name">English</span></button>
-          <button class="opt opt-lang" type="button" data-lang="zh"><span class="opt-name">中文</span></button>
         </div>
       </section>
 
@@ -369,6 +368,33 @@
   </nav>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ============ FIRST-RUN ONBOARDING (shown once) ============ -->
+  <div class="onboard" id="onboard" hidden>
+    <div class="onboard-card glass">
+      <div class="onboard-logo">💸</div>
+      <h2 class="onboard-title" data-i18n="onb_title">Welcome to NumBrrr</h2>
+      <p class="onboard-sub" data-i18n="onb_sub">Pick your country and language to get started. You can change these anytime in Settings.</p>
+
+      <div class="onboard-group">
+        <h3 class="onboard-label" data-i18n="onb_country">Country</h3>
+        <div class="onboard-options">
+          <button class="opt ob-country" type="button" data-ob-country="US"><span class="opt-name">🇺🇸 USA · USD</span></button>
+          <button class="opt ob-country" type="button" data-ob-country="TR"><span class="opt-name">🇹🇷 Türkiye · TL</span></button>
+        </div>
+      </div>
+
+      <div class="onboard-group">
+        <h3 class="onboard-label" data-i18n="onb_language">Language</h3>
+        <div class="onboard-options">
+          <button class="opt ob-lang" type="button" data-ob-lang="en"><span class="opt-name">English</span></button>
+          <button class="opt ob-lang" type="button" data-ob-lang="tr"><span class="opt-name">Türkçe</span></button>
+        </div>
+      </div>
+
+      <button class="onboard-start" id="obStart" type="button" data-i18n="onb_start">Continue</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 

@@ -30,6 +30,14 @@ const CURRENCY_META = {
   TL:  { symbol: "₺", code: "TRY", locale: "tr-TR", inflation: 40, rentHint: "30,000", valueHint: "5,000,000" },
 };
 
+// Country selection. Each country maps 1:1 to a market/currency (which already
+// carries its own deposit/interest rate via INSTRUMENTS) and a default language.
+const COUNTRIES = {
+  US: { flag: "🇺🇸", currency: "USD", lang: "en" },
+  TR: { flag: "🇹🇷", currency: "TL",  lang: "tr" },
+};
+function countryForCurrency(cur) { return cur === "TL" ? "TR" : "US"; }
+
 const SAVINGS_CATEGORIES = ["cigarettes","alcohol","subscriptions","eatingout","delivery","coffee","gaming","fuel","shopping"];
 const SAVINGS_DEFAULT_INVEST = { USD: "sp500", TL: "deposit" };
 // Income sources, pre-classified as passive (counts toward freedom) or active.
@@ -135,7 +143,9 @@ const I18N = {
     punch: "By cutting these habits and investing, you could have {x} in 10 years.",
     punch_empty: "Toggle on the habits you want to quit and type what you spend to see your number.",
     savings_note: "Projection compounds yearly contributions: FV = annual × [((1 + r)ⁿ − 1) / r], where r is the selected annual return. Returns are assumptions, not guarantees.",
-    settings_title: "Settings", language: "Language", theme: "Theme",
+    settings_title: "Settings", language: "Language", theme: "Theme", country: "Country",
+    onb_title: "Welcome to NumBrrr", onb_sub: "Pick your country and language to get started. You can change these anytime in Settings.",
+    onb_country: "Country", onb_language: "Language", onb_start: "Continue",
     theme_glass: "Liquid Glass", theme_glass_desc: "Modern frosted glass (default)",
     theme_xp: "Windows XP", theme_xp_desc: "Nostalgic early-2000s Luna blue",
     theme_medieval: "Medieval", theme_medieval_desc: "Gritty 15th-century parchment & iron",
@@ -235,7 +245,9 @@ const I18N = {
     punch: "Bu alışkanlıkları bırakıp yatırım yaparak 10 yılda {x} elde edebilirsin.",
     punch_empty: "Bırakmak istediğin alışkanlıkları aç ve harcamanı yaz; rakamını gör.",
     savings_note: "Projeksiyon yıllık katkıları bileşik hesaplar: GD = yıllık × [((1 + r)ⁿ − 1) / r], r seçilen yıllık getiridir. Getiriler varsayımdır, garanti değildir.",
-    settings_title: "Ayarlar", language: "Dil", theme: "Tema",
+    settings_title: "Ayarlar", language: "Dil", theme: "Tema", country: "Ülke",
+    onb_title: "NumBrrr'a hoş geldin", onb_sub: "Başlamak için ülkeni ve dilini seç. Bunları istediğin zaman Ayarlar'dan değiştirebilirsin.",
+    onb_country: "Ülke", onb_language: "Dil", onb_start: "Devam",
     theme_glass: "Sıvı Cam", theme_glass_desc: "Modern buzlu cam (varsayılan)",
     theme_xp: "Windows XP", theme_xp_desc: "Nostaljik 2000'ler Luna mavisi",
     theme_medieval: "Ortaçağ", theme_medieval_desc: "Sert 15. yüzyıl parşömen ve demir",
@@ -292,106 +304,6 @@ const I18N = {
       eatingout: "Dışarıda yemek / restoran", delivery: "Yemek siparişi", coffee: "Günlük kahve",
       gaming: "Oyun abonelikleri + oyun içi harcama", fuel: "Yakıt harcamaları",
       shopping: "Alışveriş",
-    },
-  },
-
-  zh: {
-    nav_home: "首页", nav_savings: "支出", nav_settings: "设置", nav_more: "更多",
-    currency: "货币", monthly_expenses: "每月支出", per_month: "/ 月",
-    real_mode: "实际收益模式", real_mode_sub: "从每个收益率中减去通胀",
-    inflation_label: "通胀（年 %）",
-    headline_tag: "通往自由最简单的路径",
-    via: "通过 {name}", return_word: "收益", real_word: "实际",
-    headline_note: "存下这么多，{name} 的收益每月约产生 {monthly}，无需动用本金即可覆盖你的支出。",
-    headline_note_extra: " 在当前通胀假设下，下面部分工具无法实现自由。",
-    not_reachable: "无法实现", no_beat_inflation: "没有工具能跑赢通胀",
-    not_reachable_note: "在这些利率下，实际收益为零或为负，被动收入无法跑赢通胀。请降低通胀假设或提高某个收益率。",
-    rule_badge: "📚 4% 法则 · Trinity 研究", rule_title: "年支出的 25 倍",
-    rule_text: 'NumBrrr 概括了一个经典理念：如果你的储蓄每年约赚 <strong>4%</strong>，那么你大约需要 <strong>年支出的 25 倍</strong>，仅靠收益就能覆盖生活，而无需动用本金。这个"安全提取率"来自 <strong>Trinity 研究 (1998)</strong>，一项对历史市场数据具有里程碑意义的学术分析，也是财务独立（FIRE）运动的基础。',
-    rule_number_label: "你的 25 倍数字（按 4%）", rule_link: "阅读 Trinity 研究 →",
-    rule_note_USD: "基于约 30 年的美国股票与债券历史收益及均衡投资组合。这是一个参考，并非保证，过往业绩不预示未来。",
-    rule_note_TL: "提示：4% 法则源自长期的美国市场历史。在里拉这样的高通胀货币中，请以实际（扣除通胀后）口径思考，打开上方的实际收益模式以获得更真实的数字。",
-    compare_title: "比较投资工具", compare_sub: "每张卡片显示：为使其年收益覆盖你的支出所需的储蓄。收益率可编辑。",
-    annual_return: "年收益率", total_required: "所需总储蓄", total_required_re: "所需总储蓄（≈ 房产价值）",
-    easiest: "最易", volatile: "高波动", doesnt_outpace: "跑不赢通胀",
-    gross_yield: "毛租金收益率", use_property: "使用你自己的房产", optional: "（可选）",
-    property_value: "房产价值", monthly_rent: "每月租金",
-    computed_yield: "计算得出的收益率 {rate}, 租金 ÷ 房产价值",
-    net_yield: "净收益", net_yield_sub: "−2% 税费、维护与空置",
-    lbl_real_rate: "实际收益率", word_inflation: "通胀", word_gross: "毛", word_costs: "成本", word_yield: "收益率",
-    eff_real: "实际", eff_net: "净", eff_effective: "有效",
-    chart_title: "所需储蓄", chart_sub: "越低越好，让钱为你工作前需要存的更少。",
-    bar_easiest: "· 最易", out_of_reach: "无法实现",
-    disc_title: "须知",
-    disc_1: "<strong>仅为估算，非建议。</strong> NumBrrr 是一个教育性规划工具，并非财务建议。",
-    disc_2: "<strong>历史 ≠ 未来。</strong> 股票指数（标普 500、纳斯达克、BIST 100）和比特币的收益为历史平均，不保证未来表现。",
-    disc_3: "<strong>比特币极度波动。</strong> 加密货币可能剧烈波动；请将其收益视为投机性。",
-    disc_4: "<strong>房地产收益各异。</strong> 租金收益率因城市和房产类型差异很大；默认值为全国平均（Global Property Guide），属历史数据，不构成保证。请使用房产价值与租金字段计算你自己的数字。",
-    disc_5: "<strong>收益率为默认值。</strong> 每个收益率都预填了合理默认值且完全可编辑，根据你自己的假设调整。",
-    cut_title: "你的支出", cut_sub: "列出你每月的支出。打开或关闭各项，看看若改为投资每项会变成多少。整个应用中计为支出的就是这里的合计。",
-    add_custom: "+ 添加自定义类别", custom_ph: "自定义类别", eg: "例如",
-    redirect_label: "如果你每月把这些钱拿去投资", per_mo: "{x} / 月", per_year: "{x} / 年",
-    invested_in: "投资于", yr1: "1 年", yr5: "5 年", yr10: "10 年",
-    punch: "戒掉这些习惯并进行投资，10 年后你可能拥有 {x}。",
-    punch_empty: "打开你想戒掉的习惯并输入花费，查看你的数字。",
-    savings_note: "预测对每年的投入进行复利计算：终值 = 年投入 × [((1 + r)ⁿ − 1) / r]，其中 r 为所选年收益率。收益为假设，并非保证。",
-    settings_title: "设置", language: "语言", theme: "主题",
-    theme_glass: "液态玻璃", theme_glass_desc: "现代磨砂玻璃（默认）",
-    theme_xp: "Windows XP", theme_xp_desc: "怀旧的 2000 年代 Luna 蓝",
-    theme_medieval: "中世纪", theme_medieval_desc: "粗犷的 15 世纪羊皮纸与铁",
-    theme_doge: "Doge", theme_doge_desc: "这么哇 · 很多钱 · 非常迷因",
-    theme_vaporwave: "Vaporwave", theme_vaporwave_desc: "80 年代霓虹梦 · 美 学",
-    more_soon: "更多功能即将推出 ✨",
-    nav_portfolio: "投资组合",
-    portfolio_title: "你的投资组合", portfolio_sub: "添加你已持有的资产，查看它们的分布。",
-    holding_ph: "持仓名称", add_holding: "+ 添加持仓", total_value: "投资组合总价值",
-    flow_title: "每月现金流", flow_income: "收入", flow_expenses: "支出", flow_net: "每月净额",
-    flow_savings_note: "如果削减你记录的开支，每月可多 +{x}。",
-    cat_cash: "现金", cat_investment: "投资",
-    asset_stocks: "股票", asset_usstock: "美股", asset_bist: "土耳其股票 (BIST)", asset_crypto: "加密货币", asset_deposit: "存款", asset_bonds: "债券", asset_realestate: "房地产", asset_gold: "黄金", asset_cash: "现金",
-    stock_search_ph: "搜索股票（如 Apple）", shares_ph: "股数",
-    nav_watchlist: "关注", watch_title: "关注列表", watch_sub: "搜索并收藏资产，跟踪其价格和表现。",
-    watch_search_ph: "搜索黄金、股票、加密货币…", watch_empty: "在上方搜索并点击，将资产加入关注列表。",
-    lbl_24h: "24h", lbl_1mo: "1月", lbl_1yr: "1年",
-    inc_from_portfolio: "+{x}/月 来自投资组合",
-    net_tax: "净额（−15% 税）", coin_search_ph: "搜索币种（如 Solana）", qty_ph: "数量", coin_loading: "正在加载实时价格…", grams_ph: "克", oz_ph: "盎司",
-    target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
-    income_line: "目前你的投资组合每月约可产生 {income}，覆盖你支出的 {pct}。",
-    freedom_reached: "🎉 你已达到自由数字。你的投资可以覆盖你的支出！",
-    portfolio_empty: "在上方添加持仓以查看资产分布。",
-    portfolio_note: "自由目标 = 年支出 ÷ 所选收益率。被动收入 = 价值 × 收益率。仅为估算，非建议。",
-    nav_income: "收入",
-    income_title: "你的收入", income_sub: "添加你的每月收入。标记其中的被动收入（租金、利息、股息）；只有被动收入计入财务自由。",
-    add_income: "+ 添加收入", income_ph: "收入来源", total_income: "每月总收入",
-    passive_label: "被动", active_label: "主动", covered_by_passive: "由被动收入覆盖",
-    surplus_line: "你每月大约还剩 {x} 可用于投资。", deficit_line: "你每月支出比收入多约 {x}。",
-    income_free: "🎉 财务自由：你的被动收入已覆盖你的支出！",
-    income_empty: "在上方添加收入以查看你的状况。",
-    income_note: "被动收入 = 租金、利息、股息等。财务自由 = 被动收入 ≥ 你的支出。",
-    inc: { salary: "工资", rental: "租金收入", interest: "利息收入", dividends: "股息", side: "副业 / 自由职业收入" },
-    note_historical: "基于历史平均，不构成保证。",
-    note_btc_warn: "比特币极度波动；该数字为投机性。",
-    note_btc_tl: "以里拉计的近 ~12 个月收益（≈ +37%，截至 2026 年中，来源：CoinGecko）。比特币极度波动，单一年份并非预测。",
-    re_note_USD: "默认毛收益率 ≈ 6.6%（Global Property Guide 全国平均，2025 Q4）。租金收益率因城市和房产类型差异很大，属历史数据，不构成保证。",
-    re_note_TL: "默认毛收益率 ≈ 7.3%（Global Property Guide 全国平均，2026 Q1）。租金收益率因城市和房产类型差异很大，属历史数据，不构成保证。",
-    inst: {
-      savings: { name: "储蓄 / 货币市场", sub: "高收益储蓄" },
-      treasury: { name: "美国国债", sub: "约 10 年期" },
-      sp500: { name: "标普 500", sub: "SPX 历史平均" },
-      nasdaq: { name: "纳斯达克 100", sub: "历史平均" },
-      btc: { name: "比特币 (BTC)", sub: "投机性", sub_tl: "近 12 个月 · TRY" },
-      realestate: { name: "房地产", sub: "租金收益率 · 租金 ÷ 价值" },
-      deposit: { name: "里拉存款", sub: "年利率" },
-      gold: { name: "黄金（里拉）", sub: "以里拉计价的黄金" },
-      bist: { name: "BIST 100", sub: "伊斯坦布尔交易所平均" },
-      eurobond: { name: "欧洲债券 / 外汇存款", sub: "与外汇挂钩的收益" },
-    },
-    cat: {
-      cigarettes: "香烟", alcohol: "酒", subscriptions: "数字订阅",
-      subscriptions_hint: "Netflix、Spotify、YouTube Premium 等",
-      eatingout: "外出就餐 / 餐厅", delivery: "外卖", coffee: "每日咖啡",
-      gaming: "游戏订阅 + 游戏内购买", fuel: "燃油 / 加油",
-      shopping: "购物",
     },
   },
 };
@@ -1642,6 +1554,30 @@ function setCurrency(cur) {
   try { localStorage.setItem("numbr_currency", cur); } catch (e) {}
 }
 
+// ---- First-run onboarding (country + language, shown once) ----
+let obCountry = "US", obLang = "en";
+function updateObActive() {
+  document.querySelectorAll(".ob-country").forEach((b) => b.classList.toggle("is-active", b.dataset.obCountry === obCountry));
+  document.querySelectorAll(".ob-lang").forEach((b) => b.classList.toggle("is-active", b.dataset.obLang === obLang));
+}
+function showOnboarding() {
+  // Pre-select sensible defaults from the browser locale.
+  const navLang = (navigator.language || "en").toLowerCase();
+  if (navLang.startsWith("tr")) { obCountry = "TR"; obLang = "tr"; }
+  applyLanguage(obLang);
+  updateObActive();
+  document.getElementById("onboard").hidden = false;
+}
+function finishOnboarding() {
+  applyLanguage(obLang);
+  setCurrency(COUNTRIES[obCountry].currency);
+  try { localStorage.setItem("numbr_onboarded", "1"); } catch (e) {}
+  document.getElementById("onboard").hidden = true;
+}
+document.querySelectorAll(".ob-country").forEach((b) => b.addEventListener("click", () => { obCountry = b.dataset.obCountry; updateObActive(); }));
+document.querySelectorAll(".ob-lang").forEach((b) => b.addEventListener("click", () => { obLang = b.dataset.obLang; applyLanguage(obLang); updateObActive(); }));
+document.getElementById("obStart").addEventListener("click", finishOnboarding);
+
 // ---- Event wiring ----
 document.querySelectorAll("[data-currency]").forEach((b) => b.addEventListener("click", () => setCurrency(b.dataset.currency)));
 
@@ -1733,6 +1669,11 @@ function loadState() {
 }
 
 // ---- Init ----
+// Detect a brand-new user BEFORE anything writes to localStorage (applyLanguage/
+// refresh call saveState, which would otherwise create numbr_state immediately).
+let isFirstRun = false;
+try { isFirstRun = !(localStorage.getItem("numbr_onboarded") || localStorage.getItem("numbr_state")); } catch (e) {}
+
 try {
   const savedLang = localStorage.getItem("numbr_lang");
   const savedTheme = localStorage.getItem("numbr_theme");
@@ -1747,6 +1688,8 @@ el.expenses.value = formatThousands(state.monthlyExpenses);
 el.inflation.value = formatRate(state.inflation[state.currency], false);
 applyTheme(state.theme);
 applyLanguage(state.lang); // builds layout + savings, applies all translations
+
+if (isFirstRun) showOnboarding();
 wireWatchSearch();
 refreshCryptoPrices(); // fetch live crypto prices (works on the deployed site)
 refreshWatchData(); // fetch performance for any saved watchlist items
