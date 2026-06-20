@@ -1291,3 +1291,43 @@ body {
 .port-ccy-toggle:hover { border-color: var(--accent); }
 .port-ccy-toggle:active { transform: scale(0.97); }
 .port-ccy-toggle[hidden] { display: none; }
+
+/* ============ Portfolio holding cards (cleaner rows) ============ */
+#portList { gap: 10px; }
+.port-row {
+  padding: 12px 14px;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--glass-border-soft);
+  border-radius: 14px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.port-row:last-of-type { border-bottom: 1px solid var(--glass-border-soft); }
+.port-row:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  background: rgba(124, 92, 255, 0.06);
+}
+/* clean editable name (drop the dashed underline) */
+.port-row .cat-name {
+  border-bottom: 1px solid transparent;
+  font-size: 15px; font-weight: 600; padding: 2px 0;
+}
+.port-row .cat-name::placeholder { color: var(--text-faint); font-weight: 500; }
+.port-row .cat-name:focus { border-bottom-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+/* asset-type select: a touch more substantial */
+.port-row .hold-type { padding: 5px 10px; border-radius: 9px; font-size: 12px; }
+/* ghost circular remove button */
+.port-row .cat-remove {
+  width: 28px; height: 28px; border-radius: 50%;
+  border-color: transparent; background: rgba(255, 255, 255, 0.05);
+  font-size: 16px; align-self: center;
+}
+.port-row .cat-remove:hover { color: #ff8a8a; background: rgba(255, 120, 120, 0.14); border-color: transparent; }
+/* computed value: clearer hierarchy */
+.port-row .crypto-value { font-size: 13.5px; }
+.port-row .crypto-value small { font-size: 11px; margin-top: 1px; }
+/* value cell: a bit wider, numbers right-aligned and sized to fit (beats the
+   mobile .money-input rule via higher specificity so big amounts don't clip) */
+.port-row .cat-amount, .port-row .crypto-cell { width: 132px; }
+.port-row .cat-amount input, .port-row .qty-field { font-size: 16px; text-align: right; }
+.port-row .money-input--sm { padding: 4px 12px; }
