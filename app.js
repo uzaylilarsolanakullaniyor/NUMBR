@@ -154,7 +154,7 @@ const I18N = {
     watch_search_ph: "Search gold, stocks, crypto…", watch_empty: "Search above and tap to add assets to your watchlist.",
     lbl_24h: "24h", lbl_1mo: "1M", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/mo from portfolio",
-    net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams",
+    net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams", oz_ph: "Ounces",
     target_via: "Freedom target via (pick one or more)", target_x: "Target {x}", to_freedom: "to financial freedom", blended_return: "Blended return",
     income_line: "Right now your portfolio could generate about {income}/month, covering {pct} of your expenses.",
     freedom_reached: "🎉 You've reached your freedom number. Your investments can cover your expenses!",
@@ -254,7 +254,7 @@ const I18N = {
     watch_search_ph: "Altın, hisse, kripto ara…", watch_empty: "Yukarıdan ara ve takip listene varlık ekle.",
     lbl_24h: "24s", lbl_1mo: "1A", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/ay portföyden",
-    net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram",
+    net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram", oz_ph: "Ons",
     target_via: "Özgürlük hedefi (bir veya birkaçını seç)", target_x: "Hedef {x}", to_freedom: "finansal özgürlüğe", blended_return: "Karma getiri",
     income_line: "Şu an portföyün ayda yaklaşık {income} üretebilir, giderlerinin {pct} kadarını karşılar.",
     freedom_reached: "🎉 Özgürlük rakamına ulaştın. Yatırımların giderlerini karşılayabilir!",
@@ -354,7 +354,7 @@ const I18N = {
     watch_search_ph: "搜索黄金、股票、加密货币…", watch_empty: "在上方搜索并点击，将资产加入关注列表。",
     lbl_24h: "24h", lbl_1mo: "1月", lbl_1yr: "1年",
     inc_from_portfolio: "+{x}/月 来自投资组合",
-    net_tax: "净额（−15% 税）", coin_search_ph: "搜索币种（如 Solana）", qty_ph: "数量", coin_loading: "正在加载实时价格…", grams_ph: "克",
+    net_tax: "净额（−15% 税）", coin_search_ph: "搜索币种（如 Solana）", qty_ph: "数量", coin_loading: "正在加载实时价格…", grams_ph: "克", oz_ph: "盎司",
     target_via: "自由目标（可选一个或多个）", target_x: "目标 {x}", to_freedom: "距财务自由", blended_return: "混合收益率",
     income_line: "目前你的投资组合每月约可产生 {income}，覆盖你支出的 {pct}。",
     freedom_reached: "🎉 你已达到自由数字。你的投资可以覆盖你的支出！",
@@ -987,14 +987,22 @@ function wireStockRow(row, id, type) {
   });
   updateStockValue(row, id);
 }
+// Gold unit: ounces in USD, grams in TL.
+function goldOz() { return state.currency !== "TL"; }
+function goldFactor() { return goldOz() ? GRAMS_PER_OZ : 1; } // grams per display unit
+function goldUnit() { return goldOz() ? "oz" : "g"; }
+function fmtQty(n) { return Math.round(n * 10000) / 10000; }
 function updateGoldValue(row, id) {
   const x = holdById(id);
   const node = row.querySelector("[data-gold-value]");
   if (!node || !x) return;
-  const price = goldPriceGram || x.price || 0; // fall back to last saved price
-  if (price && x.grams) node.innerHTML = `${formatMoney(x.grams * price)} <small>${x.grams} g @ ${formatMoney(price)}/g</small>`;
+  const perGram = goldPriceGram || x.price || 0; // app-currency price per gram (fallback to last saved)
+  const factor = goldFactor(), unit = goldUnit();
+  const unitPrice = perGram * factor;
+  const qty = x.grams ? x.grams / factor : 0;
+  if (perGram && qty) node.innerHTML = `${formatMoney(x.grams * perGram)} <small>${fmtQty(qty)} ${unit} @ ${formatMoney(unitPrice)}/${unit}</small>`;
   else if (x.grams && x.value) node.innerHTML = `${formatMoney(x.value)}`;
-  else if (price) node.innerHTML = `<small>@ ${formatMoney(price)}/g</small>`;
+  else if (perGram) node.innerHTML = `<small>@ ${formatMoney(unitPrice)}/${unit}</small>`;
   else node.textContent = "";
 }
 function updateCryptoValue(row, id) {
@@ -1095,7 +1103,7 @@ function makeHoldingRow(id) {
         ${typeSelect}
       </div>
       <div class="crypto-cell">
-        <input class="qty-field" type="text" inputmode="decimal" data-gold-grams="${id}" value="${h.grams ? h.grams : ""}" placeholder="${t("grams_ph")}" />
+        <input class="qty-field" type="text" inputmode="decimal" data-gold-grams="${id}" value="${h.grams ? fmtQty(h.grams / goldFactor()) : ""}" placeholder="${goldOz() ? t("oz_ph") : t("grams_ph")}" />
         <div class="crypto-value" data-gold-value="${id}"></div>
       </div>
       <button class="cat-remove" type="button" data-hold-del="${id}" aria-label="remove">×</button>`;
@@ -1105,7 +1113,7 @@ function makeHoldingRow(id) {
     const g = row.querySelector("[data-gold-grams]");
     g.addEventListener("input", () => {
       const x = holdById(id);
-      x.grams = parseNumber(g.value);
+      x.grams = parseNumber(g.value) * goldFactor(); // store canonical grams
       const p = goldPriceGram || x.price || 0;
       x.price = p;
       x.value = (x.grams || 0) * p;
@@ -1521,7 +1529,8 @@ function watchPriceLabel(w) {
   if (w.type === "usstock") return "$" + fmtPrice(d.price);
   if (w.type === "bist") return "₺" + fmtPrice(d.price);
   const sym = state.currency === "TL" ? "₺" : "$";
-  return sym + fmtPrice(d.price) + (w.type === "gold" ? "/g" : "");
+  if (w.type === "gold") return sym + fmtPrice(d.price * goldFactor()) + "/" + goldUnit();
+  return sym + fmtPrice(d.price);
 }
 function buildWatchlist() {
   if (el.watchSearch) el.watchSearch.placeholder = t("watch_search_ph");
