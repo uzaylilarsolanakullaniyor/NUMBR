@@ -1516,3 +1516,11 @@ body {
 .bubble-sym { font-family: "Sora", sans-serif; font-weight: 800; font-size: var(--fs, 14px); line-height: 1.05; letter-spacing: 0.02em; }
 .bubble-chg { font-size: calc(var(--fs, 14px) * 0.72); font-weight: 700; opacity: 0.95; }
 @keyframes bubble-pop { from { opacity: 0; } to { opacity: 1; } }
+
+/* Expenses summary: two stat cards side by side */
+.exp-summary { display: flex; gap: 12px; }
+.exp-stat { flex: 1; min-width: 0; padding: 15px 16px; display: flex; flex-direction: column; gap: 5px; }
+.exp-stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); font-weight: 700; line-height: 1.25; }
+.exp-stat-value { font-family: "Sora", sans-serif; font-size: clamp(19px, 5.4vw, 26px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.05; }
+.exp-stat--due .exp-stat-value { color: var(--warn); }
+.exp-rem-tag { color: var(--text-dim); font-weight: 600; }
