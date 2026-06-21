@@ -899,33 +899,34 @@ function refreshExpenses() {
   el.expMonthLabel.textContent = monthLabel(state.expenses.month);
   el.expTotal.textContent = formatMoney(expensesTotal());
 
-  // Reminders (one per recurring bill), sorted by due day, with status.
-  const today = new Date().getDate();
-  const recs = state.expenses.recurring.filter((r) => (r.amount || 0) > 0 || r.cat);
-  el.expReminders.hidden = recs.length === 0;
-  const remSum = recs.reduce((a, r) => a + (r.amount || 0), 0);
-  el.expRemTotal.textContent = remSum > 0 ? formatMoney(remSum) : "";
-  el.expReminderList.innerHTML = recs
-    .slice()
-    .sort((a, b) => (a.dueDay || 99) - (b.dueDay || 99))
-    .map((r) => {
-      let cls = "is-up", badge = "";
-      if (r.paid) cls = "is-paid";
-      else if (r.dueDay && today > r.dueDay) { cls = "is-over"; badge = t("exp_overdue"); }
-      else if (r.dueDay && r.dueDay - today <= 3) { cls = "is-soon"; badge = t("exp_soon"); }
-      const cat = (r.cat || t("exp_cat_ph")).replace(/</g, "&lt;");
-      return `<div class="exp-reminder ${cls}" data-rem="${r.id}">
-        <button class="exp-paid" type="button" data-rem-paid="${r.id}" aria-label="${t("exp_paid")}">✓</button>
-        <div class="exp-rem-main"><div class="exp-rem-cat">${cat}</div>
-          <div class="exp-rem-sub">${t("exp_due_fmt", { day: r.dueDay || "—" })}${badge ? ` · <span class="exp-rem-badge">${badge}</span>` : ""}</div></div>
-        <div class="exp-rem-amt">${formatMoney(r.amount || 0)}</div>
-      </div>`;
-    })
-    .join("");
-  el.expReminderList.querySelectorAll("[data-rem-paid]").forEach((b) => b.addEventListener("click", () => {
-    const r = state.expenses.recurring.find((x) => x.id === b.dataset.remPaid);
-    if (r) { r.paid = !r.paid; refreshExpenses(); }
-  }));
+  // Reminders: recurring bills + vehicle dated payments, combined into one list.
+  const todayDay = new Date().getDate();
+  const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+  const items = [];
+  state.expenses.recurring.forEach((r) => {
+    if (!((r.amount || 0) > 0 || r.cat)) return;
+    const st = remStatusRec(r, todayDay);
+    items.push({ id: "rec|" + r.id, title: r.cat || t("exp_cat_ph"), sub: t("exp_due_fmt", { day: r.dueDay || "—" }), urg: (r.dueDay || 99) - todayDay, amount: r.amount || 0, paid: !!r.paid, cls: st.cls, badge: st.badge });
+  });
+  (state.vehicles || []).forEach((v) => {
+    (v.sched || []).forEach((s) => {
+      if (!((s.amount || 0) > 0 || s.label)) return;
+      const st = remStatusVeh(s, today0);
+      const tag = v.plate ? ` · <span class="exp-rem-tag">${escapeHtml(v.plate)}</span>` : "";
+      items.push({ id: "veh|" + v.id + "|" + s.id, title: s.label || t("veh_label_ph"), sub: vehDateLabel(s) + tag, urg: st.urg, amount: s.amount || 0, paid: !!s.paidMonth, cls: st.cls, badge: st.badge });
+    });
+  });
+  el.expReminders.hidden = items.length === 0;
+  el.expRemTotal.textContent = formatMoney(items.reduce((a, it) => a + (it.paid ? 0 : it.amount), 0));
+  items.sort((a, b) => (a.paid - b.paid) || (a.urg - b.urg));
+  el.expReminderList.innerHTML = items.map((it) => `
+    <div class="exp-reminder ${it.cls}" data-rem-id="${it.id}">
+      <button class="exp-paid" type="button" data-rem-paid="${it.id}" aria-label="${t("exp_paid")}">✓</button>
+      <div class="exp-rem-main"><div class="exp-rem-cat">${escapeHtml(it.title)}</div>
+        <div class="exp-rem-sub">${it.sub}${it.badge ? ` · <span class="exp-rem-badge">${it.badge}</span>` : ""}</div></div>
+      <div class="exp-rem-amt">${formatMoney(it.amount)}</div>
+    </div>`).join("");
+  el.expReminderList.querySelectorAll("[data-rem-paid]").forEach((b) => b.addEventListener("click", () => toggleReminderPaid(b.dataset.remPaid)));
 
   // History (archived past months)
   const hist = state.expenses.history || [];
@@ -935,6 +936,42 @@ function refreshExpenses() {
     .join("");
 
   refreshVehicles();
+}
+
+// Reminder status helpers (shared by recurring bills + vehicle dated payments).
+function remStatusRec(r, todayDay) {
+  if (r.paid) return { cls: "is-paid", badge: "" };
+  if (r.dueDay && todayDay > r.dueDay) return { cls: "is-over", badge: t("exp_overdue") };
+  if (r.dueDay && r.dueDay - todayDay <= 3) return { cls: "is-soon", badge: t("exp_soon") };
+  return { cls: "is-up", badge: "" };
+}
+function remStatusVeh(s, today0) {
+  if (s.paidMonth) return { cls: "is-paid", badge: "", urg: 9999 };
+  if (!s.date) return { cls: "is-up", badge: "", urg: 999 };
+  const due = new Date(s.date + "T00:00:00");
+  if (isNaN(due)) return { cls: "is-up", badge: "", urg: 999 };
+  const days = Math.round((due - today0) / 86400000);
+  if (days < 0) return { cls: "is-over", badge: t("exp_overdue"), urg: days };
+  if (days <= 14) return { cls: "is-soon", badge: t("exp_soon"), urg: days };
+  return { cls: "is-up", badge: "", urg: days };
+}
+function vehDateLabel(s) {
+  if (!s.date) return "—";
+  const d = new Date(s.date + "T00:00:00");
+  if (isNaN(d)) return s.date;
+  return d.toLocaleDateString(state.lang === "tr" ? "tr-TR" : "en-US", { day: "numeric", month: "short" });
+}
+function toggleReminderPaid(id) {
+  if (id.indexOf("rec|") === 0) {
+    const r = state.expenses.recurring.find((x) => x.id === id.slice(4));
+    if (r) r.paid = !r.paid;
+  } else if (id.indexOf("veh|") === 0) {
+    const p = id.split("|");
+    const v = (state.vehicles || []).find((x) => x.id === p[1]);
+    const s = v && (v.sched || []).find((x) => x.id === p[2]);
+    if (s) s.paidMonth = s.paidMonth ? "" : state.expenses.month;
+  }
+  refreshExpenses();
 }
 
 // ============================================================
@@ -1801,6 +1838,7 @@ function startBubbleDrag(b, e) {
     b.x = clampN(ev.clientX - rect.left, b.r, rect.width - b.r);
     b.y = clampN(ev.clientY - rect.top, b.r, rect.height - b.r);
     b.vx = 0; b.vy = 0;
+    b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
   };
   const up = () => {
     document.removeEventListener("pointermove", move);
@@ -2029,7 +2067,7 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
     if (name === "savings") { rollExpenseMonth(); buildExpenses(); }
     if (name === "portfolio") refreshPortfolio();
     if (name === "income") refreshIncome();
-    if (name === "watch") refreshWatchData();
+    if (name === "watch") { refreshWatchData(); kickBubbles(); }
     window.scrollTo({ top: 0, behavior: "auto" });
   }
   tabs.forEach((tab) => {

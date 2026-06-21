@@ -144,21 +144,21 @@
         <p class="subtagline" id="expMonthLabel">—</p>
       </div>
 
-      <!-- Upcoming payment reminders (from recurring bills) -->
-      <section class="glass exp-reminders" id="expReminders" aria-label="Upcoming payments" hidden>
-        <div class="exp-rem-head">
-          <h3 class="settings-label" data-i18n="exp_reminders">Upcoming payments</h3>
-          <span class="exp-rem-total" id="expRemTotal"></span>
-        </div>
-        <div class="exp-reminder-list" id="expReminderList"></div>
-      </section>
+      <!-- Summary: this month's spend + upcoming payments, side by side -->
+      <div class="exp-summary">
+        <section class="glass exp-stat" aria-label="This month's expenses">
+          <span class="exp-stat-label" data-i18n="exp_total">This month's expenses</span>
+          <span class="exp-stat-value" id="expTotal">—</span>
+        </section>
+        <section class="glass exp-stat exp-stat--due" aria-label="Upcoming payments">
+          <span class="exp-stat-label" data-i18n="exp_reminders">Upcoming payments</span>
+          <span class="exp-stat-value" id="expRemTotal">—</span>
+        </section>
+      </div>
 
-      <!-- This month's total -->
-      <section class="glass savings-result exp-total-card" aria-label="This month's expenses">
-        <div class="savings-total">
-          <span class="savings-total-label" data-i18n="exp_total">This month's expenses</span>
-          <span class="savings-total-value" id="expTotal">—</span>
-        </div>
+      <!-- Upcoming payment reminders (recurring bills + vehicle payments) -->
+      <section class="glass exp-reminders" id="expReminders" aria-label="Upcoming payments" hidden>
+        <div class="exp-reminder-list" id="expReminderList"></div>
       </section>
 
       <!-- Recurring expenses -->
