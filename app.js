@@ -1835,21 +1835,28 @@ function kickBubbles() {
     }
   }
   if (placedNew) relaxBubbles(W, H); // only re-pack when a new bubble appeared
-  for (const b of bubbleSim.bubbles) {
-    b.x = clampN(b.x, b.r, W - b.r); b.y = clampN(b.y, b.r, H - b.r);
-    b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
-  }
+  for (const b of bubbleSim.bubbles) { b.x = clampN(b.x, b.r, W - b.r); b.y = clampN(b.y, b.r, H - b.r); }
+  renderBubbles();
 }
-// Push overlapping bubbles apart over a few synchronous passes (one-time layout).
-function relaxBubbles(W, H) {
+function renderBubbles() {
+  for (const b of bubbleSim.bubbles) b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
+}
+// Push overlapping bubbles apart over synchronous passes. If `fixed` is given,
+// that bubble stays put (the one being dragged) and only the others give way.
+function relaxBubbles(W, H, fixed) {
   const bs = bubbleSim.bubbles;
-  for (let it = 0; it < 140; it++) {
+  const iters = fixed ? 10 : 140;
+  for (let it = 0; it < iters; it++) {
     for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
       const a = bs[i], c = bs[j];
-      let dx = c.x - a.x, dy = c.y - a.y, dist = Math.hypot(dx, dy) || 0.01, min = a.r + c.r + 5;
-      if (dist < min) { const nx = dx / dist, ny = dy / dist, ov = (min - dist) / 2; a.x -= nx * ov; a.y -= ny * ov; c.x += nx * ov; c.y += ny * ov; }
+      let dx = c.x - a.x, dy = c.y - a.y, dist = Math.hypot(dx, dy) || 0.01, sep = a.r + c.r + 5 - dist;
+      if (sep <= 0) continue;
+      const nx = dx / dist, ny = dy / dist;
+      if (a === fixed) { c.x += nx * sep; c.y += ny * sep; }
+      else if (c === fixed) { a.x -= nx * sep; a.y -= ny * sep; }
+      else { a.x -= nx * sep / 2; a.y -= ny * sep / 2; c.x += nx * sep / 2; c.y += ny * sep / 2; }
     }
-    for (const b of bs) { b.x = clampN(b.x, b.r, W - b.r); b.y = clampN(b.y, b.r, H - b.r); }
+    for (const b of bs) { if (b !== fixed) { b.x = clampN(b.x, b.r, W - b.r); b.y = clampN(b.y, b.r, H - b.r); } }
   }
 }
 function startBubbleDrag(b, e) {
@@ -1861,7 +1868,8 @@ function startBubbleDrag(b, e) {
   const move = (ev) => {
     b.x = clampN(ev.clientX - rect.left, b.r, rect.width - b.r);
     b.y = clampN(ev.clientY - rect.top, b.r, rect.height - b.r);
-    b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
+    relaxBubbles(rect.width, rect.height, b); // shove others aside, keep dragged one under the finger
+    renderBubbles();
   };
   const up = () => {
     document.removeEventListener("pointermove", move);
