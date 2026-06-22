@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="NumBrrr, calculate the total savings you need to become financially free." />
-  <title>NumBrrr, What's your number?</title>
+  <title>NumBrrr</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&family=Cinzel:wght@600;700;800&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
@@ -35,15 +35,14 @@
   </div>
 
   <main class="shell">
-    <!-- Branding (shown only on the Freedom view) -->
-    <header class="brand" hidden>
-      <div class="logo">
-        <h1 class="logo-word">NumBrrr</h1>
-      </div>
-    </header>
 
     <!-- ============ HOME VIEW (Freedom calculator) ============ -->
     <div class="view" id="view-home" hidden>
+
+    <div class="view-intro">
+      <h2 class="view-title" data-i18n="home_title">Freedom</h2>
+      <p class="subtagline" data-i18n="home_sub">See how much to save so passive returns cover your expenses.</p>
+    </div>
 
     <!-- Controls -->
     <section class="glass controls" aria-label="Inputs">

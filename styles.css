@@ -1493,7 +1493,7 @@ body {
 
 /* ============ Crypto bubbles (floating, draggable physics field) ============ */
 .watch-bubbles-sec { padding: 8px; overflow: hidden; }
-.watch-bubbles { position: relative; width: 100%; height: clamp(230px, 40vh, 330px); overflow: hidden; }
+.watch-bubbles { position: relative; width: 100%; height: clamp(190px, 30vh, 250px); overflow: hidden; }
 .bubble {
   position: absolute; top: 0; left: 0;
   border-radius: 50%;

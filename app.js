@@ -109,6 +109,7 @@ let watchData = {}; // key -> { price, ccy, chg24, chg1mo, chg1y } for watchlist
 const I18N = {
   en: {
     nav_home: "Freedom", nav_savings: "Expenses", nav_settings: "Settings", nav_more: "More",
+    home_title: "Freedom", home_sub: "See how much to save so passive returns cover your expenses.",
     currency: "Currency", monthly_expenses: "Monthly expenses", per_month: "/ month",
     real_mode: "Real return mode", real_mode_sub: "Subtract inflation from each rate",
     inflation_label: "Inflation (annual %)",
@@ -223,6 +224,7 @@ const I18N = {
 
   tr: {
     nav_home: "Özgürlük", nav_savings: "Gider", nav_settings: "Ayarlar", nav_more: "Daha",
+    home_title: "Özgürlük", home_sub: "Giderlerini pasif gelirle karşılamak için ne kadar biriktirmen gerektiğini gör.",
     currency: "Para Birimi", monthly_expenses: "Aylık giderler", per_month: "/ ay",
     real_mode: "Reel getiri modu", real_mode_sub: "Her orandan enflasyonu düş",
     inflation_label: "Enflasyon (yıllık %)",
@@ -1773,7 +1775,7 @@ function clampN(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
 // Radius is proportional to how big the 24h move is relative to the biggest
 // mover currently in the list, so the largest gainer/loser is the largest
 // bubble and the smallest move is the smallest, with a clear spread.
-const BUBBLE_MIN_R = 20, BUBBLE_MAX_R = 46;
+const BUBBLE_MIN_R = 18, BUBBLE_MAX_R = 40;
 function bubbleRadius(ch, maxMag) {
   const mag = ch == null ? 0 : Math.abs(ch);
   const frac = maxMag > 0 ? Math.min(mag / maxMag, 1) : 0.35;
@@ -1781,7 +1783,7 @@ function bubbleRadius(ch, maxMag) {
 }
 function paintBubble(b) {
   const cls = b.ch == null ? "flat" : b.ch >= 0 ? "up" : "down";
-  b.node.className = "bubble " + cls + (bubbleSim.drag && bubbleSim.drag.b === b ? " is-drag" : "");
+  b.node.className = "bubble " + cls + (bubbleSim.drag === b ? " is-drag" : "");
   b.node.style.width = b.node.style.height = b.r * 2 + "px";
   b.node.style.setProperty("--fs", Math.max(10, Math.round(b.r * 0.32)) + "px");
   const chTxt = b.ch == null ? "—" : (b.ch >= 0 ? "+" : "") + b.ch.toFixed(1) + "%";
@@ -1791,7 +1793,7 @@ function paintBubble(b) {
 function syncBubbles() {
   if (!el.watchBubbles) return;
   el.watchBubblesSec.hidden = !state.watchlist.length;
-  if (!state.watchlist.length) { stopBubbles(); el.watchBubbles.innerHTML = ""; bubbleSim.bubbles = []; return; }
+  if (!state.watchlist.length) { el.watchBubbles.innerHTML = ""; bubbleSim.bubbles = []; return; }
   // Biggest absolute 24h move in the current set → drives proportional sizing.
   const maxMag = state.watchlist.reduce((m, w) => {
     const c = (watchData[w.key] || {}).chg24;
@@ -1815,89 +1817,61 @@ function syncBubbles() {
   });
   existing.forEach((b) => b.node.remove());
   bubbleSim.bubbles = keep;
-  startBubbles();
   kickBubbles();
 }
-// Place any new bubbles and paint one frame immediately (so they appear correctly
-// without waiting for the first animation frame). Safe to call repeatedly.
+// Lay bubbles out once (no auto-motion): place any new ones, relax overlaps so
+// they sit packed but still, then render. They only move when the user drags them.
 function kickBubbles() {
   const host = el.watchBubbles;
   if (!host || host.offsetParent === null) return;
   const W = host.clientWidth, H = host.clientHeight;
   if (!W || !H) return;
+  let placedNew = false;
   for (const b of bubbleSim.bubbles) {
     if (b.place) {
       b.x = b.r + Math.random() * Math.max(1, W - 2 * b.r);
       b.y = b.r + Math.random() * Math.max(1, H - 2 * b.r);
-      const a = Math.random() * 6.283, s = 0.4 + Math.random() * 0.5;
-      b.vx = Math.cos(a) * s; b.vy = Math.sin(a) * s; b.place = false;
+      b.place = false; placedNew = true;
     }
+  }
+  if (placedNew) relaxBubbles(W, H); // only re-pack when a new bubble appeared
+  for (const b of bubbleSim.bubbles) {
+    b.x = clampN(b.x, b.r, W - b.r); b.y = clampN(b.y, b.r, H - b.r);
     b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
+  }
+}
+// Push overlapping bubbles apart over a few synchronous passes (one-time layout).
+function relaxBubbles(W, H) {
+  const bs = bubbleSim.bubbles;
+  for (let it = 0; it < 140; it++) {
+    for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
+      const a = bs[i], c = bs[j];
+      let dx = c.x - a.x, dy = c.y - a.y, dist = Math.hypot(dx, dy) || 0.01, min = a.r + c.r + 5;
+      if (dist < min) { const nx = dx / dist, ny = dy / dist, ov = (min - dist) / 2; a.x -= nx * ov; a.y -= ny * ov; c.x += nx * ov; c.y += ny * ov; }
+    }
+    for (const b of bs) { b.x = clampN(b.x, b.r, W - b.r); b.y = clampN(b.y, b.r, H - b.r); }
   }
 }
 function startBubbleDrag(b, e) {
   e.preventDefault();
   const rect = el.watchBubbles.getBoundingClientRect();
-  const drag = { b, lx: e.clientX, ly: e.clientY, vx: 0, vy: 0, rect };
-  bubbleSim.drag = drag;
+  bubbleSim.drag = b;
   b.node.classList.add("is-drag");
   if (b.node.setPointerCapture) try { b.node.setPointerCapture(e.pointerId); } catch (err) {}
   const move = (ev) => {
-    drag.vx = ev.clientX - drag.lx; drag.vy = ev.clientY - drag.ly;
-    drag.lx = ev.clientX; drag.ly = ev.clientY;
     b.x = clampN(ev.clientX - rect.left, b.r, rect.width - b.r);
     b.y = clampN(ev.clientY - rect.top, b.r, rect.height - b.r);
-    b.vx = 0; b.vy = 0;
     b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
   };
   const up = () => {
     document.removeEventListener("pointermove", move);
     document.removeEventListener("pointerup", up);
     b.node.classList.remove("is-drag");
-    b.vx = clampN(drag.vx, -22, 22) * 0.5; b.vy = clampN(drag.vy, -22, 22) * 0.5;
     bubbleSim.drag = null;
   };
   document.addEventListener("pointermove", move);
   document.addEventListener("pointerup", up);
 }
-function stepBubbles() {
-  const host = el.watchBubbles;
-  bubbleSim.raf = requestAnimationFrame(stepBubbles);
-  if (!host || host.offsetParent === null) return; // view hidden → idle
-  const W = host.clientWidth, H = host.clientHeight;
-  if (!W || !H) return;
-  const bs = bubbleSim.bubbles;
-  for (const b of bs) {
-    if (b.place) { // first placement once the field has a measured size
-      b.x = b.r + Math.random() * Math.max(1, W - 2 * b.r);
-      b.y = b.r + Math.random() * Math.max(1, H - 2 * b.r);
-      const a = Math.random() * 6.283, s = 0.4 + Math.random() * 0.5;
-      b.vx = Math.cos(a) * s; b.vy = Math.sin(a) * s; b.place = false;
-    }
-    if (bubbleSim.drag && bubbleSim.drag.b === b) continue;
-    b.x += b.vx; b.y += b.vy;
-    b.vx *= 0.992; b.vy *= 0.992;
-    if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) || 0.25; }
-    else if (b.x > W - b.r) { b.x = W - b.r; b.vx = -(Math.abs(b.vx) || 0.25); }
-    if (b.y < b.r) { b.y = b.r; b.vy = Math.abs(b.vy) || 0.25; }
-    else if (b.y > H - b.r) { b.y = H - b.r; b.vy = -(Math.abs(b.vy) || 0.25); }
-    if (Math.hypot(b.vx, b.vy) < 0.15) { const a = Math.random() * 6.283; b.vx += Math.cos(a) * 0.22; b.vy += Math.sin(a) * 0.22; }
-  }
-  for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++) {
-    const a = bs[i], c = bs[j];
-    let dx = c.x - a.x, dy = c.y - a.y, dist = Math.hypot(dx, dy) || 0.001, min = a.r + c.r;
-    if (dist < min) {
-      const nx = dx / dist, ny = dy / dist, ov = (min - dist) / 2;
-      if (!(bubbleSim.drag && bubbleSim.drag.b === a)) { a.x -= nx * ov; a.y -= ny * ov; }
-      if (!(bubbleSim.drag && bubbleSim.drag.b === c)) { c.x += nx * ov; c.y += ny * ov; }
-      const diff = (c.vx * nx + c.vy * ny) - (a.vx * nx + a.vy * ny);
-      a.vx += diff * nx; a.vy += diff * ny; c.vx -= diff * nx; c.vy -= diff * ny;
-    }
-  }
-  for (const b of bs) b.node.style.transform = `translate(${(b.x - b.r).toFixed(1)}px, ${(b.y - b.r).toFixed(1)}px)`;
-}
-function startBubbles() { if (!bubbleSim.raf) bubbleSim.raf = requestAnimationFrame(stepBubbles); }
-function stopBubbles() { if (bubbleSim.raf) { cancelAnimationFrame(bubbleSim.raf); bubbleSim.raf = 0; } }
 
 function buildWatchlist() {
   if (el.watchSearch) el.watchSearch.placeholder = t("watch_search_ph");
@@ -2108,7 +2082,6 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
     document.getElementById("view-portfolio").hidden = name !== "portfolio";
     document.getElementById("view-income").hidden = name !== "income";
     document.getElementById("view-watch").hidden = name !== "watch";
-    document.querySelector(".brand").hidden = name !== "home"; // logo only on Home
     if (name === "savings") { rollExpenseMonth(); buildExpenses(); }
     if (name === "portfolio") refreshPortfolio();
     if (name === "income") refreshIncome();
