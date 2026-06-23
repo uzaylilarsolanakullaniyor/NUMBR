@@ -160,7 +160,7 @@ const I18N = {
     punch: "By cutting these habits and investing, you could have {x} in 10 years.",
     punch_empty: "Toggle on the habits you want to quit and type what you spend to see your number.",
     savings_note: "Projection compounds yearly contributions: FV = annual × [((1 + r)ⁿ − 1) / r], where r is the selected annual return. Returns are assumptions, not guarantees.",
-    settings_title: "Settings", language: "Language", theme: "Theme", country: "Country",
+    settings_title: "Settings", language: "Language", theme: "Theme", country: "Country", sound: "Sound", sound_fx: "Sound effects",
     onb_title: "Welcome to NumBrrr", onb_sub: "Pick your country and language to get started. You can change these anytime in Settings.",
     onb_country: "Country", onb_language: "Language", onb_start: "Continue",
     theme_glass: "Liquid Glass", theme_glass_desc: "Modern frosted glass (default)",
@@ -269,7 +269,7 @@ const I18N = {
     punch: "Bu alışkanlıkları bırakıp yatırım yaparak 10 yılda {x} elde edebilirsin.",
     punch_empty: "Bırakmak istediğin alışkanlıkları aç ve harcamanı yaz; rakamını gör.",
     savings_note: "Projeksiyon yıllık katkıları bileşik hesaplar: GD = yıllık × [((1 + r)ⁿ − 1) / r], r seçilen yıllık getiridir. Getiriler varsayımdır, garanti değildir.",
-    settings_title: "Ayarlar", language: "Dil", theme: "Tema", country: "Ülke",
+    settings_title: "Ayarlar", language: "Dil", theme: "Tema", country: "Ülke", sound: "Ses", sound_fx: "Ses efektleri",
     onb_title: "NumBrrr'a hoş geldin", onb_sub: "Başlamak için ülkeni ve dilini seç. Bunları istediğin zaman Ayarlar'dan değiştirebilirsin.",
     onb_country: "Ülke", onb_language: "Dil", onb_start: "Devam",
     theme_glass: "Sıvı Cam", theme_glass_desc: "Modern buzlu cam (varsayılan)",
@@ -333,6 +333,7 @@ const state = {
   currency: "USD",
   monthlyExpenses: 3000,
   realMode: false,
+  sound: true,
   inflation: { USD: 3, TL: 40 },
   rates: {
     USD: Object.fromEntries(INSTRUMENTS.USD.map((i) => [i.id, i.rate])),
@@ -2148,6 +2149,43 @@ document.querySelectorAll(".ob-country").forEach((b) => b.addEventListener("clic
 document.querySelectorAll(".ob-lang").forEach((b) => b.addEventListener("click", () => { obLang = b.dataset.obLang; applyLanguage(obLang); updateObActive(); }));
 document.getElementById("obStart").addEventListener("click", finishOnboarding);
 
+// ---- Sound effects (Web Audio, synthesized; respects the Sound setting) ----
+let audioCtx = null;
+function sfx(name) {
+  if (!state.sound) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const P = {
+      tap:    { type: "sine",     f1: 380, f2: 300, dur: 0.06, gain: 0.05 },
+      add:    { type: "triangle", f1: 520, f2: 820, dur: 0.13, gain: 0.06 },
+      remove: { type: "triangle", f1: 480, f2: 200, dur: 0.13, gain: 0.06 },
+      toggle: { type: "square",   f1: 660, f2: 660, dur: 0.05, gain: 0.035 },
+    }[name] || { type: "sine", f1: 380, f2: 300, dur: 0.06, gain: 0.05 };
+    const osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+    osc.type = P.type;
+    osc.frequency.setValueAtTime(P.f1, now);
+    osc.frequency.exponentialRampToValueAtTime(P.f2, now + P.dur);
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(P.gain, now + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + P.dur);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + P.dur + 0.03);
+  } catch (e) {}
+}
+// One delegated listener picks the right sound from the clicked control.
+document.addEventListener("click", (e) => {
+  if (!state.sound) return;
+  const t = e.target;
+  if (t.closest(".cat-remove, .watch-del")) sfx("remove");
+  else if (t.closest(".add-cat, .veh-add-btn, .coin-opt")) sfx("add");
+  else if (t.closest(".opt, .exp-paid, .net-tax-btn, .port-ccy-toggle, .exp-hist-toggle, .switch, .watch-grip")) sfx("toggle");
+  else if (t.closest(".tab")) sfx("tap");
+}, true);
+
 // ---- Event wiring ----
 document.querySelectorAll("[data-currency]").forEach((b) => b.addEventListener("click", () => setCurrency(b.dataset.currency)));
 
@@ -2169,6 +2207,9 @@ el.expenses.addEventListener("input", () => { state.monthlyExpenses = parseNumbe
 el.expenses.addEventListener("blur", () => { if (state.monthlyExpenses > 0) el.expenses.value = formatThousands(state.monthlyExpenses); });
 
 el.realMode.addEventListener("change", () => { state.realMode = el.realMode.checked; el.inflationField.hidden = !state.realMode; refresh(); });
+
+const soundToggle = document.getElementById("soundToggle");
+soundToggle.addEventListener("change", () => { state.sound = soundToggle.checked; saveState(); if (state.sound) sfx("toggle"); });
 el.inflation.addEventListener("input", () => { state.inflation[state.currency] = parseDecimal(el.inflation.value); refresh(); });
 
 document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => applyLanguage(b.dataset.lang)));
@@ -2216,7 +2257,7 @@ function saveState() {
     localStorage.setItem("numbr_state", JSON.stringify({
       v: 1,
       lang: state.lang, theme: state.theme, currency: state.currency,
-      monthlyExpenses: state.monthlyExpenses, realMode: state.realMode,
+      monthlyExpenses: state.monthlyExpenses, realMode: state.realMode, sound: state.sound,
       inflation: state.inflation, rates: state.rates, realEstate: state.realEstate,
       expenses: state.expenses, vehicles: state.vehicles, vehSeq: state.vehSeq,
       income: state.income, portfolio: state.portfolio, watchlist: state.watchlist,
@@ -2233,6 +2274,7 @@ function loadState() {
   if (s.currency && CURRENCY_META[s.currency]) state.currency = s.currency;
   if (typeof s.monthlyExpenses === "number") state.monthlyExpenses = s.monthlyExpenses;
   if (typeof s.realMode === "boolean") state.realMode = s.realMode;
+  if (typeof s.sound === "boolean") state.sound = s.sound;
   if (s.inflation) state.inflation = s.inflation;
   if (s.rates) state.rates = s.rates;
   if (s.realEstate) state.realEstate = s.realEstate;
@@ -2282,6 +2324,7 @@ rollExpenseMonth(); // archive past months + start the current month before rend
 el.expenses.value = formatThousands(state.monthlyExpenses);
 el.inflation.value = formatRate(state.inflation[state.currency], false);
 applyTheme(state.theme);
+soundToggle.checked = state.sound;
 applyLanguage(state.lang); // builds layout + savings, applies all translations
 
 if (isFirstRun) showOnboarding();
