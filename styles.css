@@ -83,6 +83,13 @@ body {
   92%  { opacity: var(--money-op, 0.5); }
   100% { transform: translateY(-130vh) translateX(var(--sway, 20px)) rotate(var(--rot, 25deg)); opacity: 0; }
 }
+/* Falling variant (top → bottom) used by the Doge & Solana coin themes */
+@keyframes moneyFall {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+  8%   { opacity: var(--money-op, 0.5); }
+  92%  { opacity: var(--money-op, 0.5); }
+  100% { transform: translateY(130vh) translateX(var(--sway, 20px)) rotate(var(--rot, 25deg)); opacity: 0; }
+}
 /* Only the Liquid Glass theme shows the money rain */
 [data-theme="xp"] .money-rain,
 [data-theme="medieval"] .money-rain,
@@ -684,10 +691,10 @@ body {
 .leg-head span { color: var(--text-dim); }
 
 /* ---------- Portfolio donut ---------- */
-.port-chart { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.port-chart { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; }
 .port-chart[hidden] { display: none; }
 .donut-wrap { flex: none; }
-.donut { width: 150px; height: 150px; display: block; }
+.donut { width: clamp(184px, 50vw, 220px); height: clamp(184px, 50vw, 220px); display: block; }
 .donut circle { transition: stroke-dasharray 0.5s ease, stroke-dashoffset 0.5s ease; }
 .donut-legend { flex: 1; min-width: 190px; display: flex; flex-direction: column; gap: 10px; }
 .leg-item { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
@@ -1124,6 +1131,7 @@ body {
   width: 1.3em; height: 1.3em;
   background: url("logo/DOGE.png") center / contain no-repeat;
   filter: drop-shadow(0 2px 5px rgba(120, 80, 10, 0.3));
+  bottom: auto; top: -14vh; animation-name: moneyFall; /* fall top → bottom */
 }
 [data-theme="doge"] .blob {
   display: block; width: auto; height: auto; border-radius: 0; background: none; filter: none; opacity: 0.9;
@@ -1260,6 +1268,7 @@ body {
   width: 1.15em; height: 1.15em;
   background: url("logo/SOL.png") center / contain no-repeat;
   filter: drop-shadow(0 0 6px rgba(153, 69, 255, 0.45));
+  bottom: auto; top: -14vh; animation-name: moneyFall; /* fall top → bottom */
 }
 [data-theme="solana"] .glass, [data-theme="solana"] .card {
   background: rgba(20, 14, 38, 0.6);
