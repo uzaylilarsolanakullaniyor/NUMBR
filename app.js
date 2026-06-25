@@ -1172,10 +1172,7 @@ function updateStockValue(row, id, loading) {
   const node = row.querySelector("[data-stock-value]");
   if (!node || !x) return;
   if (loading) { node.innerHTML = `<small>${t("coin_loading")}</small>`; return; }
-  const ccy = x.assetType === "bist" ? "₺" : "$";
-  if (x.nativePrice && x.shares) node.innerHTML = `${formatMoney(stockValue(x))} <small>${x.shares} @ ${ccy}${fmtPrice(x.nativePrice)}</small>`;
-  else if (x.nativePrice) node.innerHTML = `<small>@ ${ccy}${fmtPrice(x.nativePrice)}</small>`;
-  else if (x.symbol) node.innerHTML = `<small>${x.symbol}</small>`;
+  if (x.nativePrice && x.shares) node.textContent = formatMoney(stockValue(x));
   else node.textContent = "";
 }
 function wireStockRow(row, id, type) {
@@ -1235,12 +1232,9 @@ function updateGoldValue(row, id) {
   const node = row.querySelector("[data-gold-value]");
   if (!node || !x) return;
   const perGram = goldPriceGram || x.price || 0; // app-currency price per gram (fallback to last saved)
-  const factor = goldFactor(), unit = goldUnit();
-  const unitPrice = perGram * factor;
-  const qty = x.grams ? x.grams / factor : 0;
-  if (perGram && qty) node.innerHTML = `${formatMoney(x.grams * perGram)} <small>${fmtQty(qty)} ${unit} @ ${formatMoney(unitPrice)}/${unit}</small>`;
-  else if (x.grams && x.value) node.innerHTML = `${formatMoney(x.value)}`;
-  else if (perGram) node.innerHTML = `<small>@ ${formatMoney(unitPrice)}/${unit}</small>`;
+  const qty = x.grams ? x.grams / goldFactor() : 0;
+  if (perGram && qty) node.textContent = formatMoney(x.grams * perGram);
+  else if (x.grams && x.value) node.textContent = formatMoney(x.value);
   else node.textContent = "";
 }
 // USD held as an investment: the dollar amount is canonical; its app-currency
@@ -1252,9 +1246,9 @@ function updateUsdValue(row, id) {
   if (!node || !x) return;
   const usd = x.usd || 0;
   if (usd && state.currency === "TL" && usdTry) {
-    node.innerHTML = `${formatMoney(usd * usdTry)} <small>$${formatThousands(usd)} @ ${CURRENCY_META.TL.symbol}${usdTry.toFixed(2)}</small>`;
+    node.textContent = formatMoney(usd * usdTry);
   } else if (usd) {
-    node.innerHTML = `${formatMoney(x.value || usd)}`;
+    node.textContent = formatMoney(x.value || usd);
   } else {
     node.textContent = "";
   }
@@ -1263,8 +1257,7 @@ function updateCryptoValue(row, id) {
   const x = holdById(id);
   const node = row.querySelector("[data-coin-value]");
   if (!node || !x) return;
-  if (x.price && x.qty) node.innerHTML = `${formatMoney(x.value)} <small>${fmtQty(x.qty)} ${x.coinSymbol || ""} @ ${formatMoney(x.price)}</small>`;
-  else if (x.price) node.innerHTML = `<small>@ ${formatMoney(x.price)} / ${x.coinSymbol || ""}</small>`;
+  if (x.price && x.qty) node.textContent = formatMoney(x.value);
   else node.textContent = "";
 }
 function wireCryptoRow(row, id) {
