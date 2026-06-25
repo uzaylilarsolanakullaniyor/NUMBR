@@ -116,13 +116,6 @@ body {
   /* own compositing layer → frosted cards repaint atomically, no text artifacts */
   will-change: transform;
 }
-/* Apple-style liquid-glass refraction on the default Glass theme. Chromium reads
-   the unprefixed backdrop-filter (blur + SVG displacement); Safari/Firefox use the
-   -webkit- value above (plain frosted glass) since they can't do url() backdrops. */
-[data-theme="glass"] .glass,
-[data-theme="glass"] .card {
-  backdrop-filter: blur(12px) saturate(150%) url(#liquid-prism-intense);
-}
 .brand { text-align: center; padding-top: 8px; }
 .logo { display: inline-flex; align-items: center; gap: 14px; }
 .logo-mark {
