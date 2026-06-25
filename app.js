@@ -188,6 +188,7 @@ const I18N = {
     stock_search_ph: "Search stock (e.g. Apple)", shares_ph: "Shares",
     nav_watchlist: "Watch", watch_title: "Watchlist", watch_sub: "Search and favorite assets to track them.",
     watch_search_ph: "Search gold, stocks, crypto…", watch_empty: "Search above and tap to add assets to your watchlist.", watch_chart: "Open chart on TradingView",
+    top_perf_title: "This year's top performers", asset_silver: "Silver", top_perf_loading: "Ranking the past year…",
     lbl_24h: "24h", lbl_1mo: "1M", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/mo from portfolio",
     net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams", oz_ph: "Ounces",
@@ -303,6 +304,7 @@ const I18N = {
     stock_search_ph: "Hisse ara (örn. THY)", shares_ph: "Adet",
     nav_watchlist: "Takip", watch_title: "Takip Listesi", watch_sub: "Varlık ara, favorile ve takip et.",
     watch_search_ph: "Altın, hisse, kripto ara…", watch_empty: "Yukarıdan ara ve takip listene varlık ekle.", watch_chart: "TradingView'de grafiği aç",
+    top_perf_title: "Son 1 yılın yıldızları", asset_silver: "Gümüş", top_perf_loading: "Son 1 yıl sıralanıyor…",
     lbl_24h: "24s", lbl_1mo: "1A", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/ay portföyden",
     net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram", oz_ph: "Ons",
@@ -1876,6 +1878,7 @@ function watchPriceLabel(w) {
 function tradingViewSymbol(w) {
   const sym = (w.sym || w.key || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (w.type === "gold") return "TVC:GOLD";
+  if (w.type === "silver") return "TVC:SILVER";
   if (w.type === "crypto") return "BINANCE:" + sym + "USDT";
   if (w.type === "bist") return "BIST:" + sym;
   return sym; // US stocks: TradingView resolves the bare ticker
@@ -2140,6 +2143,86 @@ async function refreshWatchData() {
   }
   buildWatchlist();
 }
+
+// ---- Best 1-year performers (fixed pool: top-10 crypto, top-10 US stocks, gold,
+// silver, and top-10 BIST when on TL). Ranked by 1y return, best 5 shown. ----
+let topPerfData = null;      // ranked list currently shown
+let topPerfBuiltFor = null;  // currency it was built for (rebuild on change)
+async function getStock1y(ysym) {
+  const key = "numbr_p1y_" + ysym;
+  try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) return c.d; } catch (e) {}
+  const d = await fetchStockData(ysym);
+  if (d && d.price != null) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e) {} return d; }
+  return null;
+}
+async function getTopCrypto1y() {
+  const key = "numbr_topcrypto1y";
+  try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) return c.data; } catch (e) {}
+  try {
+    const r = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&price_change_percentage=1y");
+    if (r.ok) {
+      const data = (await r.json()).map((c) => ({ type: "crypto", key: c.id, sym: (c.symbol || "").toUpperCase(), name: c.name, price: c.current_price, ccy: "USD", chg1y: c.price_change_percentage_1y_in_currency }));
+      try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
+      return data;
+    }
+  } catch (e) {}
+  return [];
+}
+async function buildTopPerformers() {
+  const listEl = document.getElementById("topPerfList");
+  if (!listEl) return;
+  if (topPerfData && topPerfBuiltFor === state.currency) { renderTopPerformers(); return; }
+  if (topPerfBuiltFor !== state.currency || !listEl.children.length) listEl.innerHTML = `<div class="top-perf-msg">${t("top_perf_loading")}</div>`;
+  topPerfBuiltFor = state.currency;
+  const isTL = state.currency === "TL";
+
+  const candidates = [];
+  (await getTopCrypto1y()).forEach((c) => candidates.push(c));
+
+  const jobs = [];
+  US_STOCKS.slice(0, 10).forEach((s) => jobs.push({ type: "usstock", key: s.s, sym: s.s, name: s.n, ysym: s.s, ccy: "USD" }));
+  jobs.push({ type: "gold", key: "gold", sym: "XAU", name: t("asset_gold"), ysym: "GC=F", ccy: "USD" });
+  jobs.push({ type: "silver", key: "silver", sym: "XAG", name: t("asset_silver"), ysym: "SI=F", ccy: "USD" });
+  if (isTL) BIST_STOCKS.slice(0, 10).forEach((s) => jobs.push({ type: "bist", key: s.s, sym: s.s, name: s.n, ysym: s.s + ".IS", ccy: "TRY" }));
+
+  const results = await Promise.all(jobs.map(async (j) => {
+    const d = await getStock1y(j.ysym);
+    return d && typeof d.chg1y === "number" ? Object.assign({}, j, { price: d.price, chg1y: d.chg1y }) : null;
+  }));
+  results.forEach((r) => { if (r) candidates.push(r); });
+
+  // If currency changed while we awaited, a newer build owns the list now.
+  if (topPerfBuiltFor !== state.currency) return;
+  topPerfData = candidates
+    .filter((c) => typeof c.chg1y === "number" && isFinite(c.chg1y))
+    .sort((a, b) => b.chg1y - a.chg1y)
+    .slice(0, 5);
+  renderTopPerformers();
+}
+function perfPrice(c) {
+  if (c.price == null) return "";
+  return (c.ccy === "TRY" ? "₺" : "$") + fmtPrice(c.price);
+}
+function renderTopPerformers() {
+  const listEl = document.getElementById("topPerfList");
+  if (!listEl) return;
+  const ranked = topPerfData || [];
+  if (!ranked.length) { listEl.innerHTML = `<div class="top-perf-msg">${t("top_perf_loading")}</div>`; return; }
+  listEl.innerHTML = ranked.map((c, i) => {
+    const cls = c.chg1y >= 0 ? "up" : "down";
+    const txt = (c.chg1y >= 0 ? "+" : "") + c.chg1y.toFixed(1) + "%";
+    return `<button class="top-perf-row" type="button" data-tv="${c.type}|${c.key}|${c.sym}" title="${t("watch_chart")}">
+      <span class="top-perf-rank">${i + 1}</span>
+      <span class="top-perf-name">${escapeHtml(c.name)} <small>${escapeHtml(c.sym)}</small></span>
+      <span class="top-perf-price">${perfPrice(c)}</span>
+      <span class="top-perf-chg ${cls}">${txt}</span>
+    </button>`;
+  }).join("");
+  listEl.querySelectorAll("[data-tv]").forEach((b) => b.addEventListener("click", () => {
+    const p = b.dataset.tv.split("|");
+    openTradingView({ type: p[0], key: p[1], sym: p[2] });
+  }));
+}
 function wireWatchSearch() {
   const search = el.watchSearch, dd = el.watchDd;
   if (!search) return;
@@ -2179,6 +2262,14 @@ function applyTheme(theme) {
   updateSettingsActive();
   saveState();
   try { localStorage.setItem("numbr_theme", theme); } catch (e) {}
+}
+// Warm the browser cache with the wallpaper-backed themes so switching to them is
+// instant instead of waiting ~1s for the image to download on first use.
+let themeWallpapersPreloaded = false;
+function preloadThemeWallpapers() {
+  if (themeWallpapersPreloaded) return;
+  themeWallpapersPreloaded = true;
+  ["Themes/Neon/neon2.jpg", "Themes/win/winwal.jpg"].forEach((src) => { const img = new Image(); img.src = src; });
 }
 function updateSettingsActive() {
   document.querySelectorAll(".opt-cur").forEach((b) => b.classList.toggle("is-active", b.dataset.currency === state.currency));
@@ -2320,8 +2411,9 @@ document.querySelectorAll("[data-theme-pick]").forEach((b) => b.addEventListener
     if (name === "savings") { rollExpenseMonth(); buildExpenses(); }
     if (name === "portfolio") refreshPortfolio();
     if (name === "income") refreshIncome();
-    if (name === "watch") { refreshWatchData(); kickBubbles(); }
+    if (name === "watch") { refreshWatchData(); buildTopPerformers(); kickBubbles(); }
     else stopBubbles(); // pause the bubble animation loop off the Watch view
+    if (name === "settings") preloadThemeWallpapers(); // user is about to pick a theme
     window.scrollTo({ top: 0, behavior: "auto" });
   }
   tabs.forEach((tab) => {
@@ -2415,3 +2507,6 @@ else { try { if (!localStorage.getItem("numbr_guide_seen")) showGuide(); } catch
 wireWatchSearch();
 refreshCryptoPrices(); // fetch live crypto prices (works on the deployed site)
 refreshWatchData(); // fetch performance for any saved watchlist items
+// Prefetch theme wallpapers once the page is idle so theme switches are instant.
+if (typeof requestIdleCallback === "function") requestIdleCallback(preloadThemeWallpapers, { timeout: 3000 });
+else setTimeout(preloadThemeWallpapers, 1500);
