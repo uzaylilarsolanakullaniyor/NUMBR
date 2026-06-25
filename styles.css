@@ -995,22 +995,10 @@ body {
   box-shadow: inset 0 0 0 2px var(--accent);
 }
 .opt-lang, .opt-cur { flex: 1; min-width: 110px; justify-content: center; font-size: 17px; font-weight: 600; }
-.opt-theme .opt-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-.opt-theme .opt-name { font-size: 16px; font-weight: 700; }
-.opt-theme .opt-desc { font-size: 12.5px; color: var(--text-dim); }
+.opt-theme { justify-content: space-between; }
+.opt-theme .opt-name { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; }
 .opt-check { opacity: 0; color: var(--accent); font-weight: 800; font-size: 18px; transition: opacity 0.2s ease; }
 .opt.is-active .opt-check { opacity: 1; }
-.theme-swatch {
-  width: 46px; height: 46px; border-radius: 11px; flex: none;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-.theme-swatch--glass { background: linear-gradient(135deg, #7c5cff, #21d4fd); }
-.theme-swatch--xp { background: linear-gradient(180deg, #3a6ea5 0%, #7cb0e0 48%, #8ec64f 52%, #5ba32f 100%); }
-.theme-swatch--medieval { background: linear-gradient(135deg, #2a1d10 0%, #b8893a 55%, #e8dcc0 100%); }
-.theme-swatch--doge { background: linear-gradient(135deg, #e3c79a 0%, #f5b400 38%, #e84d8a 68%, #3aa0ff 100%); }
-.theme-swatch--neon { background: linear-gradient(135deg, #2bf0ff 0%, #c34dff 50%, #ff3ca0 100%); }
-.theme-swatch--solana { background: linear-gradient(135deg, #9945ff 0%, #14f195 100%); }
 
 /* ============================================================
    THEME: Windows XP (Luna)
@@ -1031,7 +1019,7 @@ body {
 }
 [data-theme="xp"] .blob { display: none; }
 [data-theme="xp"] .bg {
-  background: linear-gradient(180deg, #2b66b0 0%, #4e8bd0 28%, #84b6e6 44%, #cfe6a8 50%, #8ec64f 56%, #6cb33f 74%, #4e982e 100%);
+  background: #3a6ea5 url("Themes/win/winwal.jpg") center center / cover no-repeat;
 }
 [data-theme="xp"] .glass, [data-theme="xp"] .card {
   background: #ECE9D8;
