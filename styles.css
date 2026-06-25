@@ -1477,9 +1477,19 @@ body {
 .port-row .cat-amount, .port-row .crypto-cell { width: 132px; }
 .port-row .cat-amount input, .port-row .qty-field { font-size: 16px; text-align: right; }
 .port-row .money-input--sm { padding: 4px 12px; }
-.port-row .usd-input { width: 100%; padding: 4px 10px; }
+.port-row .usd-input { width: 100%; padding: 4px 12px; }
 .port-row .usd-input input { font-size: 16px; text-align: right; min-width: 0; }
 .port-row .usd-input .money-symbol { font-size: 14px; }
+/* On dark themes the qty inputs use a light glass fill while .money-input is near
+   black, so the $ amount reads darker than the other rows. Mirror the qty-field
+   look on those themes. Light themes (xp/doge/medieval) already match. */
+[data-theme="glass"] .port-row .usd-input,
+[data-theme="neon"] .port-row .usd-input,
+[data-theme="solana"] .port-row .usd-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--glass-border-soft);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
 
 /* ============ Expenses (Gider) view ============ */
 .exp-sec-label { margin-bottom: 14px; }
