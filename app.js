@@ -80,6 +80,55 @@ const US_STOCKS = [
   { s: "SCHD", n: "Schwab US Dividend (SCHD)" }, { s: "VYM", n: "Vanguard High Dividend (VYM)" },
   { s: "XLK", n: "Technology Select Sector (XLK)" }, { s: "XLF", n: "Financial Select Sector (XLF)" },
   { s: "XLE", n: "Energy Select Sector (XLE)" }, { s: "SMH", n: "VanEck Semiconductor (SMH)" },
+  // More US stocks (NASDAQ-100 / S&P large & mid caps, popular names)
+  { s: "GOOG", n: "Alphabet (Class C)" }, { s: "TMUS", n: "T-Mobile US" }, { s: "CMCSA", n: "Comcast" }, { s: "CHTR", n: "Charter Communications" },
+  { s: "TXN", n: "Texas Instruments" }, { s: "AMAT", n: "Applied Materials" }, { s: "LRCX", n: "Lam Research" }, { s: "KLAC", n: "KLA Corp" },
+  { s: "ADI", n: "Analog Devices" }, { s: "NXPI", n: "NXP Semiconductors" }, { s: "MRVL", n: "Marvell" }, { s: "ON", n: "ON Semiconductor" },
+  { s: "MCHP", n: "Microchip Technology" }, { s: "SNPS", n: "Synopsys" }, { s: "CDNS", n: "Cadence Design" }, { s: "FTNT", n: "Fortinet" },
+  { s: "PANW", n: "Palo Alto Networks" }, { s: "CRWD", n: "CrowdStrike" }, { s: "ZS", n: "Zscaler" }, { s: "NET", n: "Cloudflare" },
+  { s: "DDOG", n: "Datadog" }, { s: "SNOW", n: "Snowflake" }, { s: "MDB", n: "MongoDB" }, { s: "NOW", n: "ServiceNow" },
+  { s: "INTU", n: "Intuit" }, { s: "ADSK", n: "Autodesk" }, { s: "SMCI", n: "Super Micro Computer" }, { s: "ARM", n: "Arm Holdings" },
+  { s: "ASML", n: "ASML Holding" }, { s: "TSM", n: "TSMC" }, { s: "DELL", n: "Dell Technologies" }, { s: "HPQ", n: "HP Inc" },
+  { s: "WDC", n: "Western Digital" }, { s: "GLW", n: "Corning" }, { s: "TEAM", n: "Atlassian" }, { s: "WDAY", n: "Workday" },
+  { s: "SNAP", n: "Snap" }, { s: "PINS", n: "Pinterest" }, { s: "RBLX", n: "Roblox" }, { s: "DASH", n: "DoorDash" },
+  { s: "LYFT", n: "Lyft" }, { s: "ZM", n: "Zoom" }, { s: "DOCU", n: "DocuSign" }, { s: "TWLO", n: "Twilio" },
+  { s: "OKTA", n: "Okta" }, { s: "ROKU", n: "Roku" }, { s: "TTD", n: "The Trade Desk" }, { s: "RDDT", n: "Reddit" },
+  { s: "BIDU", n: "Baidu" }, { s: "JD", n: "JD.com" }, { s: "PDD", n: "PDD Holdings" }, { s: "NTES", n: "NetEase" },
+  { s: "SE", n: "Sea Limited" }, { s: "MELI", n: "MercadoLibre" },
+  { s: "WFC", n: "Wells Fargo" }, { s: "C", n: "Citigroup" }, { s: "MS", n: "Morgan Stanley" }, { s: "SCHW", n: "Charles Schwab" },
+  { s: "BLK", n: "BlackRock" }, { s: "AXP", n: "American Express" }, { s: "BX", n: "Blackstone" }, { s: "KKR", n: "KKR" },
+  { s: "SPGI", n: "S&P Global" }, { s: "ICE", n: "Intercontinental Exchange" }, { s: "CME", n: "CME Group" }, { s: "COF", n: "Capital One" },
+  { s: "USB", n: "U.S. Bancorp" }, { s: "PNC", n: "PNC Financial" }, { s: "MCO", n: "Moody's" }, { s: "PGR", n: "Progressive" },
+  { s: "MET", n: "MetLife" }, { s: "AIG", n: "AIG" }, { s: "TRV", n: "Travelers" }, { s: "MMC", n: "Marsh McLennan" },
+  { s: "ABBV", n: "AbbVie" }, { s: "TMO", n: "Thermo Fisher" }, { s: "ABT", n: "Abbott" }, { s: "DHR", n: "Danaher" },
+  { s: "BMY", n: "Bristol Myers Squibb" }, { s: "AMGN", n: "Amgen" }, { s: "GILD", n: "Gilead Sciences" }, { s: "ISRG", n: "Intuitive Surgical" },
+  { s: "MDT", n: "Medtronic" }, { s: "SYK", n: "Stryker" }, { s: "BSX", n: "Boston Scientific" }, { s: "CI", n: "Cigna" },
+  { s: "CVS", n: "CVS Health" }, { s: "ELV", n: "Elevance Health" }, { s: "ZTS", n: "Zoetis" }, { s: "VRTX", n: "Vertex Pharma" },
+  { s: "REGN", n: "Regeneron" }, { s: "MRNA", n: "Moderna" }, { s: "BIIB", n: "Biogen" }, { s: "DXCM", n: "DexCom" },
+  { s: "HCA", n: "HCA Healthcare" }, { s: "MCK", n: "McKesson" }, { s: "IDXX", n: "IDEXX Labs" }, { s: "GEHC", n: "GE HealthCare" },
+  { s: "LOW", n: "Lowe's" }, { s: "TGT", n: "Target" }, { s: "TJX", n: "TJX Companies" }, { s: "DG", n: "Dollar General" },
+  { s: "DLTR", n: "Dollar Tree" }, { s: "ROST", n: "Ross Stores" }, { s: "ULTA", n: "Ulta Beauty" }, { s: "LULU", n: "Lululemon" },
+  { s: "CMG", n: "Chipotle" }, { s: "YUM", n: "Yum! Brands" }, { s: "EL", n: "Estée Lauder" }, { s: "CL", n: "Colgate-Palmolive" },
+  { s: "KMB", n: "Kimberly-Clark" }, { s: "GIS", n: "General Mills" }, { s: "MDLZ", n: "Mondelez" }, { s: "MO", n: "Altria" },
+  { s: "PM", n: "Philip Morris" }, { s: "STZ", n: "Constellation Brands" }, { s: "MNST", n: "Monster Beverage" }, { s: "KHC", n: "Kraft Heinz" },
+  { s: "KR", n: "Kroger" }, { s: "KDP", n: "Keurig Dr Pepper" }, { s: "HSY", n: "Hershey" },
+  { s: "CAT", n: "Caterpillar" }, { s: "DE", n: "Deere" }, { s: "HON", n: "Honeywell" }, { s: "GE", n: "GE Aerospace" },
+  { s: "MMM", n: "3M" }, { s: "UPS", n: "UPS" }, { s: "FDX", n: "FedEx" }, { s: "LMT", n: "Lockheed Martin" },
+  { s: "RTX", n: "RTX (Raytheon)" }, { s: "NOC", n: "Northrop Grumman" }, { s: "GD", n: "General Dynamics" }, { s: "UNP", n: "Union Pacific" },
+  { s: "CSX", n: "CSX" }, { s: "NSC", n: "Norfolk Southern" }, { s: "EMR", n: "Emerson Electric" }, { s: "ETN", n: "Eaton" },
+  { s: "ITW", n: "Illinois Tool Works" }, { s: "GEV", n: "GE Vernova" }, { s: "WM", n: "Waste Management" }, { s: "PH", n: "Parker Hannifin" },
+  { s: "CMI", n: "Cummins" }, { s: "PCAR", n: "PACCAR" },
+  { s: "COP", n: "ConocoPhillips" }, { s: "SLB", n: "Schlumberger" }, { s: "EOG", n: "EOG Resources" }, { s: "MPC", n: "Marathon Petroleum" },
+  { s: "PSX", n: "Phillips 66" }, { s: "VLO", n: "Valero Energy" }, { s: "OXY", n: "Occidental" }, { s: "WMB", n: "Williams" },
+  { s: "KMI", n: "Kinder Morgan" }, { s: "OKE", n: "ONEOK" }, { s: "HAL", n: "Halliburton" }, { s: "FANG", n: "Diamondback Energy" },
+  { s: "RIVN", n: "Rivian" }, { s: "LCID", n: "Lucid" }, { s: "NIO", n: "NIO" }, { s: "LI", n: "Li Auto" }, { s: "XPEV", n: "XPeng" },
+  { s: "HOOD", n: "Robinhood" }, { s: "SOFI", n: "SoFi" }, { s: "AFRM", n: "Affirm" }, { s: "DKNG", n: "DraftKings" },
+  { s: "CVNA", n: "Carvana" }, { s: "MSTR", n: "MicroStrategy" }, { s: "GME", n: "GameStop" },
+  { s: "DAL", n: "Delta Air Lines" }, { s: "UAL", n: "United Airlines" }, { s: "AAL", n: "American Airlines" }, { s: "LUV", n: "Southwest Airlines" },
+  { s: "ETSY", n: "Etsy" }, { s: "EBAY", n: "eBay" }, { s: "CHWY", n: "Chewy" }, { s: "MAR", n: "Marriott" },
+  { s: "BKNG", n: "Booking Holdings" }, { s: "HLT", n: "Hilton" }, { s: "CTAS", n: "Cintas" }, { s: "FAST", n: "Fastenal" },
+  { s: "ODFL", n: "Old Dominion" }, { s: "PAYX", n: "Paychex" }, { s: "CPRT", n: "Copart" }, { s: "EA", n: "Electronic Arts" },
+  { s: "TTWO", n: "Take-Two Interactive" }, { s: "WBD", n: "Warner Bros Discovery" }, { s: "PARA", n: "Paramount" },
 ];
 const BIST_STOCKS = [
   { s: "AKBNK", n: "Akbank" }, { s: "GARAN", n: "Garanti BBVA" }, { s: "ISCTR", n: "İş Bankası" }, { s: "YKBNK", n: "Yapı Kredi" },
@@ -1497,10 +1546,10 @@ function makeHoldingRow(id) {
 // ---- Live crypto prices (CoinGecko, client-side; works on the deployed site) ----
 async function loadCryptoMarkets() {
   const vs = state.currency === "TL" ? "try" : "usd";
-  const key = "numbr_crypto2_" + vs;
+  const key = "numbr_crypto3_" + vs;
   try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) { cryptoMarkets = c.data; return; } } catch (e) {}
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${vs}&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h`);
+    const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${vs}&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h`);
     if (!res.ok) return;
     const json = await res.json();
     cryptoMarkets = json.map((c) => ({ id: c.id, symbol: (c.symbol || "").toUpperCase(), name: c.name, price: c.current_price, chg24: c.price_change_percentage_24h_in_currency }));
@@ -1958,6 +2007,7 @@ function tradingViewSymbol(w) {
   const sym = (w.sym || w.key || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (w.type === "gold") return "TVC:GOLD";
   if (w.type === "silver") return "TVC:SILVER";
+  if (w.type === "index") return "TVC:" + sym; // TVC:SPX / TVC:NDX / TVC:DJI
   if (w.type === "crypto") return "BINANCE:" + sym + "USDT";
   if (w.type === "bist") return "BIST:" + sym;
   return sym; // US stocks: TradingView resolves the bare ticker
@@ -2276,13 +2326,25 @@ async function getStock1y(ysym) {
   if (d && d.price != null) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e) {} return d; }
   return null;
 }
+// Stablecoins (~0% return) and wrapped/staked tokens (near-duplicates of BTC/ETH)
+// are excluded from the leaderboard so they don't crowd out real performers.
+const TOP_PERF_SKIP = new Set([
+  "USDT", "USDC", "DAI", "BUSD", "TUSD", "USDD", "FDUSD", "PYUSD", "USDE", "USDS",
+  "USD1", "GUSD", "FRAX", "LUSD", "USDP", "EURT", "EURS", "RLUSD", "USDG", "USDTB",
+  "BUIDL", "AEUR", "EURC", "USDX", "CRVUSD",
+  "WBTC", "WETH", "STETH", "WSTETH", "WEETH", "WBETH", "CBBTC", "RETH", "LBTC",
+  "SOLVBTC", "BNSOL", "JITOSOL", "METH", "RSETH", "EZETH", "CBETH",
+]);
 async function getTopCrypto1y() {
-  const key = "numbr_topcrypto1y";
+  const key = "numbr_topcrypto1y2";
   try { const c = JSON.parse(localStorage.getItem(key) || "null"); if (c && Date.now() - c.t < 24 * 3600 * 1000) return c.data; } catch (e) {}
   try {
-    const r = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&price_change_percentage=1y");
+    const r = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=40&page=1&price_change_percentage=1y");
     if (r.ok) {
-      const data = (await r.json()).map((c) => ({ type: "crypto", key: c.id, sym: (c.symbol || "").toUpperCase(), name: c.name, price: c.current_price, ccy: "USD", chg1y: c.price_change_percentage_1y_in_currency }));
+      const data = (await r.json())
+        .filter((c) => !TOP_PERF_SKIP.has((c.symbol || "").toUpperCase()))
+        .slice(0, 25)
+        .map((c) => ({ type: "crypto", key: c.id, sym: (c.symbol || "").toUpperCase(), name: c.name, price: c.current_price, ccy: "USD", chg1y: c.price_change_percentage_1y_in_currency }));
       try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), data })); } catch (e) {}
       return data;
     }
@@ -2311,7 +2373,16 @@ async function buildTopPerformers() {
   if (topPerfBuiltFor !== built) return;
 
   const jobs = [];
-  US_STOCKS.slice(0, 10).forEach((s) => jobs.push({ type: "usstock", key: s.s, sym: s.s, name: s.n, ysym: s.s, ccy: "USD" }));
+  // Curated megacaps plus a few notable high-momentum names for the US pool.
+  const usPool = US_STOCKS.slice(0, 18).map((s) => s.s);
+  ["AVGO", "LLY", "UBER", "COIN", "PLTR", "MSTR", "HOOD", "AMD", "NFLX", "CRWD"]
+    .forEach((s) => { if (!usPool.includes(s)) usPool.push(s); });
+  const usName = {}; US_STOCKS.forEach((s) => (usName[s.s] = s.n));
+  usPool.forEach((s) => jobs.push({ type: "usstock", key: s, sym: s, name: usName[s] || s, ysym: s, ccy: "USD" }));
+  // Major US indices.
+  jobs.push({ type: "index", key: "spx", sym: "SPX", name: "S&P 500", ysym: "^GSPC", ccy: "USD" });
+  jobs.push({ type: "index", key: "ndx", sym: "NDX", name: "Nasdaq 100", ysym: "^NDX", ccy: "USD" });
+  jobs.push({ type: "index", key: "dji", sym: "DJI", name: "Dow Jones", ysym: "^DJI", ccy: "USD" });
   jobs.push({ type: "gold", key: "gold", sym: "XAU", name: t("asset_gold"), ysym: "GC=F", ccy: "USD" });
   jobs.push({ type: "silver", key: "silver", sym: "XAG", name: t("asset_silver"), ysym: "SI=F", ccy: "USD" });
   if (isTL) {
@@ -2345,6 +2416,7 @@ async function buildTopPerformers() {
 }
 function perfPrice(c) {
   if (c.price == null) return "";
+  if (c.type === "index") return fmtPrice(c.price); // index level, no currency symbol
   return (c.ccy === "TRY" ? "₺" : "$") + fmtPrice(c.price);
 }
 function renderTopPerformers() {
