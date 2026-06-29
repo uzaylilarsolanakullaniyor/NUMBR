@@ -95,6 +95,60 @@ const BIST_STOCKS = [
   { s: "OYAKC", n: "Oyak Çimento" }, { s: "CIMSA", n: "Çimsa" }, { s: "AEFES", n: "Anadolu Efes" }, { s: "CCOLA", n: "Coca-Cola İçecek" },
   { s: "ULKER", n: "Ülker" }, { s: "TAVHL", n: "TAV Havalimanları" }, { s: "EKGYO", n: "Emlak Konut GYO" }, { s: "ASTOR", n: "Astor Enerji" },
   { s: "BRSAN", n: "Borusan Boru" }, { s: "SMRTG", n: "Smart Güneş" }, { s: "GWIND", n: "Galata Wind" }, { s: "REEDR", n: "Reeder" },
+  // Banks, finance & insurance
+  { s: "TSKB", n: "Türkiye Sınai Kalkınma Bankası" }, { s: "ALBRK", n: "Albaraka Türk" }, { s: "SKBNK", n: "Şekerbank" }, { s: "QNBFB", n: "QNB Finansbank" },
+  { s: "ISMEN", n: "İş Yatırım" }, { s: "GLCVY", n: "Gelecek Varlık" }, { s: "ISFIN", n: "İş Finansal Kiralama" }, { s: "AGESA", n: "Agesa Emeklilik" },
+  { s: "ANHYT", n: "Anadolu Hayat Emeklilik" }, { s: "ANSGR", n: "Anadolu Sigorta" }, { s: "TURSG", n: "Türkiye Sigorta" }, { s: "RAYSG", n: "Ray Sigorta" },
+  // Holdings
+  { s: "DOHOL", n: "Doğan Holding" }, { s: "GLYHO", n: "Global Yatırım Holding" }, { s: "AGHOL", n: "AG Anadolu Grubu Holding" }, { s: "NTHOL", n: "Net Holding" },
+  { s: "IHLAS", n: "İhlas Holding" }, { s: "BERA", n: "Bera Holding" }, { s: "POLHO", n: "Polisan Holding" }, { s: "VERUS", n: "Verusa Holding" },
+  { s: "GSDHO", n: "GSD Holding" }, { s: "IEYHO", n: "Işıklar Enerji" }, { s: "ECZYT", n: "Eczacıbaşı Yatırım" }, { s: "ECILC", n: "Eczacıbaşı İlaç" },
+  // Energy & utilities
+  { s: "AKFYE", n: "Akfen Yenilenebilir Enerji" }, { s: "AYDEM", n: "Aydem Enerji" }, { s: "GESAN", n: "Girişim Elektrik" }, { s: "CWENE", n: "CW Enerji" },
+  { s: "KONTR", n: "Kontrolmatik" }, { s: "NTGAZ", n: "Naturelgaz" }, { s: "AKSA", n: "Aksa Akrilik" }, { s: "AKSUE", n: "Aksu Enerji" },
+  { s: "ESEN", n: "Esenboğa Elektrik" }, { s: "ALFAS", n: "Alfa Solar" }, { s: "EUPWR", n: "Europower Enerji" }, { s: "AYEN", n: "Ayen Enerji" },
+  // Industrials & technology
+  { s: "KORDS", n: "Kordsa" }, { s: "BRISA", n: "Brisa" }, { s: "GOODY", n: "Goodyear" }, { s: "EGEEN", n: "Ege Endüstri" },
+  { s: "KARSN", n: "Karsan" }, { s: "KLMSN", n: "Klimasan" }, { s: "ARENA", n: "Arena Bilgisayar" }, { s: "INDES", n: "İndeks Bilgisayar" },
+  { s: "LOGO", n: "Logo Yazılım" }, { s: "NETAS", n: "Netaş" }, { s: "KAREL", n: "Karel Elektronik" }, { s: "ALCTL", n: "Alcatel Lucent Teletaş" },
+  { s: "ESCOM", n: "Escort Teknoloji" }, { s: "PKART", n: "Plastikkart" }, { s: "MIATK", n: "Mia Teknoloji" }, { s: "ARDYZ", n: "ARD Bilişim" },
+  { s: "PAPIL", n: "Papilon Savunma" }, { s: "OBASE", n: "Obase" }, { s: "FORTE", n: "Forte Bilgi İletişim" }, { s: "KFEIN", n: "Kafein Yazılım" },
+  { s: "SDTTR", n: "SDT Uzay ve Savunma" }, { s: "HTTBT", n: "Hitit Bilgisayar" }, { s: "INVEO", n: "Inveo Yatırım" }, { s: "LINK", n: "Link Bilgisayar" },
+  { s: "DGATE", n: "Datagate Bilgisayar" }, { s: "ARMDA", n: "Armada Bilgisayar" }, { s: "PENTA", n: "Penta Teknoloji" }, { s: "FONET", n: "Fonet Bilgi Teknolojileri" },
+  { s: "DESPC", n: "Despec Bilgisayar" }, { s: "ALCAR", n: "Alarko Carrier" }, { s: "MOBTL", n: "Mobiltel İletişim" },
+  // Steel & metals
+  { s: "ISDMR", n: "İskenderun Demir Çelik" }, { s: "CEMTS", n: "Çemtaş" }, { s: "BURCE", n: "Burçelik" }, { s: "DMSAS", n: "Demisaş" },
+  // Chemicals & paint
+  { s: "ALKIM", n: "Alkim Kimya" }, { s: "BAGFS", n: "Bagfaş" }, { s: "EGGUB", n: "Ege Gübre" }, { s: "DYOBY", n: "DYO Boya" },
+  { s: "SODSN", n: "Sodaş Sodyum" }, { s: "MRSHL", n: "Marshall" },
+  // Retail & consumer
+  { s: "BIZIM", n: "Bizim Toptan" }, { s: "CRFSA", n: "CarrefourSA" }, { s: "TKNSA", n: "Teknosa" }, { s: "VAKKO", n: "Vakko" },
+  { s: "MAVI", n: "Mavi Giyim" }, { s: "SELEC", n: "Selçuk Ecza Deposu" },
+  // Food & beverage
+  { s: "TATGD", n: "Tat Gıda" }, { s: "KERVT", n: "Kerevitaş" }, { s: "KNFRT", n: "Konfrut Gıda" }, { s: "PNSUT", n: "Pınar Süt" },
+  { s: "BANVT", n: "Banvit" }, { s: "PETUN", n: "Pınar Et ve Un" }, { s: "TUKAS", n: "Tukaş" }, { s: "ULUUN", n: "Ulusoy Un" },
+  { s: "TBORG", n: "Türk Tuborg" }, { s: "AVOD", n: "A.V.O.D. Gıda" }, { s: "KTSKR", n: "Kütahya Şeker" },
+  // Cement & construction materials
+  { s: "AKCNS", n: "Akçansa" }, { s: "BUCIM", n: "Bursa Çimento" }, { s: "GOLTS", n: "Göltaş Çimento" }, { s: "NUHCM", n: "Nuh Çimento" },
+  { s: "BTCIM", n: "Batıçim" }, { s: "BSOKE", n: "Batısöke Çimento" }, { s: "AFYON", n: "Afyon Çimento" }, { s: "KONYA", n: "Konya Çimento" },
+  { s: "ADANA", n: "Adana Çimento" }, { s: "BOLUC", n: "Bolu Çimento" }, { s: "MRDIN", n: "Mardin Çimento" }, { s: "UNYEC", n: "Ünye Çimento" },
+  { s: "EGSER", n: "Ege Seramik" }, { s: "KUTPO", n: "Kütahya Porselen" }, { s: "QUAGR", n: "Qua Granite" },
+  // Textile & apparel
+  { s: "YATAS", n: "Yataş" }, { s: "BLCYT", n: "Bilici Yatırım" }, { s: "DAGI", n: "Dagi Giyim" }, { s: "DESA", n: "Desa Deri" },
+  { s: "MNDRS", n: "Menderes Tekstil" }, { s: "KRTEK", n: "Karsu Tekstil" }, { s: "SKTAS", n: "Söktaş" }, { s: "YUNSA", n: "Yünsa" },
+  { s: "ARSAN", n: "Arsan Tekstil" }, { s: "BOSSA", n: "Bossa" },
+  // Health & pharma
+  { s: "DEVA", n: "Deva Holding" }, { s: "RTALB", n: "RTA Laboratuvarları" }, { s: "LKMNH", n: "Lokman Hekim" }, { s: "MPARK", n: "MLP Sağlık" },
+  // Real estate (GYO)
+  { s: "TRGYO", n: "Torunlar GYO" }, { s: "KLGYO", n: "Kiler GYO" }, { s: "OZKGY", n: "Özak GYO" }, { s: "AKSGY", n: "Akiş GYO" },
+  { s: "RYGYO", n: "Reysaş GYO" }, { s: "VKGYO", n: "Vakıf GYO" }, { s: "HLGYO", n: "Halk GYO" }, { s: "ISGYO", n: "İş GYO" },
+  { s: "SNGYO", n: "Sinpaş GYO" },
+  // Automotive parts
+  { s: "PARSN", n: "Parsan" }, { s: "KATMR", n: "Katmerciler" }, { s: "JANTS", n: "Jantsa" }, { s: "BFREN", n: "Bosch Fren" }, { s: "DITAS", n: "Ditaş Doğan" },
+  // Tourism, packaging, mining & other
+  { s: "MAALT", n: "Marmaris Altınyunus" }, { s: "MARTI", n: "Martı Otel" }, { s: "AYCES", n: "Altınyunus Çeşme" },
+  { s: "ANELE", n: "Anel Elektrik" }, { s: "KARTN", n: "Kartonsan" }, { s: "BAKAB", n: "Bak Ambalaj" },
+  { s: "IPEKE", n: "İpek Doğal Enerji" }, { s: "PRKME", n: "Park Elektrik" },
 ];
 // BIST 30 (XU030) constituents — used for the 1-year performance leaderboard in TR.
 const BIST30 = [
