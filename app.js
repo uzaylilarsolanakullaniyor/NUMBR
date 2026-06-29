@@ -2208,7 +2208,7 @@ async function refreshWatchData() {
 }
 
 // ---- Best 1-year performers (fixed pool: top-10 crypto, top-10 US stocks, gold,
-// silver, and the BIST 30 when on TL). Ranked by 1y return, best 10 shown. ----
+// silver, and the BIST 30 when on TL). Ranked by 1y return, best 15 shown. ----
 let topPerfData = null;      // ranked list currently shown
 let topPerfBuiltFor = null;  // currency it was built for (rebuild on change)
 async function getStock1y(ysym) {
@@ -2235,7 +2235,7 @@ function rankTopPerf(candidates) {
   return candidates
     .filter((c) => typeof c.chg1y === "number" && isFinite(c.chg1y))
     .sort((a, b) => b.chg1y - a.chg1y)
-    .slice(0, 10);
+    .slice(0, 15);
 }
 async function buildTopPerformers() {
   const listEl = document.getElementById("topPerfList");
@@ -2264,23 +2264,24 @@ async function buildTopPerformers() {
 
   // Per-job timeout so one stuck quote can't hang the whole leaderboard.
   const withTimeout = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(() => res(null), ms))]);
-  // BIST is quoted in lira; convert its 1y return (and price) to USD via USD/TRY so
-  // it ranks on real dollar gains, not lira-inflation-padded numbers.
-  const fx = isTL ? await withTimeout(getStock1y("TRY=X"), 7000) : null;
-  const fxChg = fx && typeof fx.chg1y === "number" ? fx.chg1y : null;
-  const fxNow = fx && fx.price ? fx.price : usdTry;
-  const results = await Promise.all(jobs.map(async (j) => {
+  // Fetch the USD/TRY rate in parallel with the quotes (not before them).
+  const fxP = isTL ? withTimeout(getStock1y("TRY=X"), 7000) : Promise.resolve(null);
+  const resultsP = Promise.all(jobs.map(async (j) => {
     const d = await withTimeout(getStock1y(j.ysym), 7000);
-    if (!d || typeof d.chg1y !== "number") return null;
-    if (j.type === "bist") {
-      if (fxChg == null || !fxNow) return null; // need USD/TRY to express BIST in USD
-      const usdChg = ((1 + d.chg1y / 100) / (1 + fxChg / 100) - 1) * 100;
-      return Object.assign({}, j, { price: d.price / fxNow, chg1y: usdChg, ccy: "USD" });
-    }
-    return Object.assign({}, j, { price: d.price, chg1y: d.chg1y });
+    return d && typeof d.chg1y === "number" ? Object.assign({}, j, { price: d.price, chg1y: d.chg1y }) : null;
   }));
+  const [fx, results] = await Promise.all([fxP, resultsP]);
   if (topPerfBuiltFor !== built) return; // a newer build owns the list now
-  results.forEach((r) => { if (r) candidates.push(r); });
+  const fxChg = fx && typeof fx.chg1y === "number" ? fx.chg1y : null;
+  results.forEach((r) => {
+    if (!r) return;
+    // BIST: rank on the USD return (lira inflation aside), but keep the ₺ price.
+    if (r.type === "bist") {
+      if (fxChg == null) return; // no USD/TRY → can't express a dollar return
+      r.chg1y = ((1 + r.chg1y / 100) / (1 + fxChg / 100) - 1) * 100;
+    }
+    candidates.push(r);
+  });
   topPerfData = rankTopPerf(candidates);
   renderTopPerformers();
 }
