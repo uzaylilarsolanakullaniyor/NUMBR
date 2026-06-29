@@ -195,6 +195,7 @@ const I18N = {
     nav_watchlist: "Watch", watch_title: "Watchlist", watch_sub: "Search and favorite assets to track them.",
     watch_search_ph: "Search gold, stocks, crypto…", watch_empty: "Search above and tap to add assets to your watchlist.", watch_chart: "Open chart on TradingView",
     top_perf_title: "This year's top performers", asset_silver: "Silver", top_perf_loading: "Ranking the past year…",
+    watch_ccy: "Show price in USD / TL",
     lbl_24h: "24h", lbl_1mo: "1M", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/mo from portfolio",
     net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams", oz_ph: "Ounces",
@@ -311,6 +312,7 @@ const I18N = {
     nav_watchlist: "Takip", watch_title: "Takip Listesi", watch_sub: "Varlık ara, favorile ve takip et.",
     watch_search_ph: "Altın, hisse, kripto ara…", watch_empty: "Yukarıdan ara ve takip listene varlık ekle.", watch_chart: "TradingView'de grafiği aç",
     top_perf_title: "Son 1 yılın yıldızları", asset_silver: "Gümüş", top_perf_loading: "Son 1 yıl sıralanıyor…",
+    watch_ccy: "Fiyatı dolar / TL göster",
     lbl_24h: "24s", lbl_1mo: "1A", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/ay portföyden",
     net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram", oz_ph: "Ons",
@@ -1871,14 +1873,31 @@ function chgHtml(label, v) {
   if (v == null || isNaN(v)) return `<span class="perf-chip"><span class="perf-lbl">${label}</span> <b>—</b></span>`;
   return `<span class="perf-chip ${v >= 0 ? "up" : "down"}"><span class="perf-lbl">${label}</span> <b>${v >= 0 ? "+" : ""}${v.toFixed(1)}%</b></span>`;
 }
+// The currency a row's price is shown in (native by type), optionally flipped by
+// the per-row toggle (TR users only).
+function watchNativeCcy(w) {
+  if (w.type === "usstock") return "USD";
+  if (w.type === "bist") return "TRY";
+  return state.currency === "TL" ? "TRY" : "USD"; // gold, crypto follow the app
+}
+// The per-row toggle only applies for TR users (the feature is TL-only).
+function watchFlipped(w) { return !!w.altCcy && state.currency === "TL"; }
+function watchDisplayCcy(w) {
+  const native = watchNativeCcy(w);
+  return watchFlipped(w) ? (native === "USD" ? "TRY" : "USD") : native;
+}
 function watchPriceLabel(w) {
   const d = watchData[w.key];
   if (!d || d.price == null) return "…";
-  if (w.type === "usstock") return "$" + fmtPrice(d.price);
-  if (w.type === "bist") return "₺" + fmtPrice(d.price);
-  const sym = state.currency === "TL" ? "₺" : "$";
-  if (w.type === "gold") return sym + fmtPrice(d.price * goldFactor()) + "/" + goldUnit();
-  return sym + fmtPrice(d.price);
+  const suffix = w.type === "gold" ? "/" + goldUnit() : "";
+  let value = w.type === "gold" ? d.price * goldFactor() : d.price;
+  const native = watchNativeCcy(w);
+  let ccy = native;
+  if (watchFlipped(w) && usdTry > 0) {
+    if (native === "USD") { value *= usdTry; ccy = "TRY"; }
+    else { value /= usdTry; ccy = "USD"; }
+  }
+  return (ccy === "TRY" ? "₺" : "$") + fmtPrice(value) + suffix;
 }
 // Map a watchlist item to a TradingView symbol and open its chart in a new tab.
 function tradingViewSymbol(w) {
@@ -2062,8 +2081,13 @@ function buildWatchlist() {
   syncBubbles();
   if (!state.watchlist.length) { el.watchList.innerHTML = ""; el.watchEmpty.hidden = false; return; }
   el.watchEmpty.hidden = true;
+  const showCcyToggle = state.currency === "TL";
   el.watchList.innerHTML = state.watchlist.map((w) => {
     const d = watchData[w.key] || {};
+    const toSym = watchDisplayCcy(w) === "TRY" ? "$" : "₺"; // switch-to currency
+    const ccyBtn = showCcyToggle
+      ? `<button class="watch-ccy" type="button" data-wccy="${w.type}|${w.key}" aria-label="${t("watch_ccy")}" title="${t("watch_ccy")}">${toSym}</button>`
+      : "";
     return `<div class="watch-row" data-wkey="${w.type}|${w.key}">
       <button class="watch-grip" type="button" data-wgrip aria-label="reorder">
         <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><circle cx="5" cy="3" r="1.3"/><circle cx="11" cy="3" r="1.3"/><circle cx="5" cy="8" r="1.3"/><circle cx="11" cy="8" r="1.3"/><circle cx="5" cy="13" r="1.3"/><circle cx="11" cy="13" r="1.3"/></svg>
@@ -2075,6 +2099,7 @@ function buildWatchlist() {
         </div>
         <div class="watch-perf">
           ${chgHtml(t("lbl_24h"), d.chg24)}${chgHtml(t("lbl_1mo"), d.chg1mo)}${chgHtml(t("lbl_1yr"), d.chg1y)}
+          ${ccyBtn}
           <button class="watch-chart" type="button" data-wchart="${w.type}|${w.key}" aria-label="${t("watch_chart")}" title="${t("watch_chart")}">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M8 16l3.5-4 3 3L20 8"/></svg>
           </button>
@@ -2092,6 +2117,12 @@ function buildWatchlist() {
     const type = b.dataset.wchart.slice(0, idx), key = b.dataset.wchart.slice(idx + 1);
     const w = state.watchlist.find((x) => x.type === type && x.key === key);
     if (w) openTradingView(w);
+  }));
+  el.watchList.querySelectorAll("[data-wccy]").forEach((b) => b.addEventListener("click", () => {
+    const idx = b.dataset.wccy.indexOf("|");
+    const type = b.dataset.wccy.slice(0, idx), key = b.dataset.wccy.slice(idx + 1);
+    const w = state.watchlist.find((x) => x.type === type && x.key === key);
+    if (w) { w.altCcy = !w.altCcy; saveState(); buildWatchlist(); }
   }));
   el.watchList.querySelectorAll("[data-wgrip]").forEach((g) => g.addEventListener("pointerdown", startWatchReorder));
 }
@@ -2189,13 +2220,11 @@ async function buildTopPerformers() {
   topPerfBuiltFor = built;
   const isTL = built === "TL";
 
-  // Crypto resolves in one fast call — show a first ranking immediately, then
-  // fold in stocks/metals as they arrive so a slow quote never blocks the list.
+  // Gather every source, then render once. Showing the crypto-only batch first
+  // made the list look all-crypto while the stocks/metals were still loading.
   const candidates = [];
   (await getTopCrypto1y()).forEach((c) => candidates.push(c));
   if (topPerfBuiltFor !== built) return;
-  topPerfData = rankTopPerf(candidates);
-  renderTopPerformers();
 
   const jobs = [];
   US_STOCKS.slice(0, 10).forEach((s) => jobs.push({ type: "usstock", key: s.s, sym: s.s, name: s.n, ysym: s.s, ccy: "USD" }));
