@@ -2145,7 +2145,7 @@ async function refreshWatchData() {
 }
 
 // ---- Best 1-year performers (fixed pool: top-10 crypto, top-10 US stocks, gold,
-// silver, and top-10 BIST when on TL). Ranked by 1y return, best 5 shown. ----
+// silver, and top-10 BIST when on TL). Ranked by 1y return, best 10 shown. ----
 let topPerfData = null;      // ranked list currently shown
 let topPerfBuiltFor = null;  // currency it was built for (rebuild on change)
 async function getStock1y(ysym) {
@@ -2168,16 +2168,28 @@ async function getTopCrypto1y() {
   } catch (e) {}
   return [];
 }
+function rankTopPerf(candidates) {
+  return candidates
+    .filter((c) => typeof c.chg1y === "number" && isFinite(c.chg1y))
+    .sort((a, b) => b.chg1y - a.chg1y)
+    .slice(0, 10);
+}
 async function buildTopPerformers() {
   const listEl = document.getElementById("topPerfList");
   if (!listEl) return;
   if (topPerfData && topPerfBuiltFor === state.currency) { renderTopPerformers(); return; }
   if (topPerfBuiltFor !== state.currency || !listEl.children.length) listEl.innerHTML = `<div class="top-perf-msg">${t("top_perf_loading")}</div>`;
-  topPerfBuiltFor = state.currency;
-  const isTL = state.currency === "TL";
+  const built = state.currency; // guard against currency changing mid-fetch
+  topPerfBuiltFor = built;
+  const isTL = built === "TL";
 
+  // Crypto resolves in one fast call — show a first ranking immediately, then
+  // fold in stocks/metals as they arrive so a slow quote never blocks the list.
   const candidates = [];
   (await getTopCrypto1y()).forEach((c) => candidates.push(c));
+  if (topPerfBuiltFor !== built) return;
+  topPerfData = rankTopPerf(candidates);
+  renderTopPerformers();
 
   const jobs = [];
   US_STOCKS.slice(0, 10).forEach((s) => jobs.push({ type: "usstock", key: s.s, sym: s.s, name: s.n, ysym: s.s, ccy: "USD" }));
@@ -2185,18 +2197,15 @@ async function buildTopPerformers() {
   jobs.push({ type: "silver", key: "silver", sym: "XAG", name: t("asset_silver"), ysym: "SI=F", ccy: "USD" });
   if (isTL) BIST_STOCKS.slice(0, 10).forEach((s) => jobs.push({ type: "bist", key: s.s, sym: s.s, name: s.n, ysym: s.s + ".IS", ccy: "TRY" }));
 
+  // Per-job timeout so one stuck quote can't hang the whole leaderboard.
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(() => res(null), ms))]);
   const results = await Promise.all(jobs.map(async (j) => {
-    const d = await getStock1y(j.ysym);
+    const d = await withTimeout(getStock1y(j.ysym), 7000);
     return d && typeof d.chg1y === "number" ? Object.assign({}, j, { price: d.price, chg1y: d.chg1y }) : null;
   }));
+  if (topPerfBuiltFor !== built) return; // a newer build owns the list now
   results.forEach((r) => { if (r) candidates.push(r); });
-
-  // If currency changed while we awaited, a newer build owns the list now.
-  if (topPerfBuiltFor !== state.currency) return;
-  topPerfData = candidates
-    .filter((c) => typeof c.chg1y === "number" && isFinite(c.chg1y))
-    .sort((a, b) => b.chg1y - a.chg1y)
-    .slice(0, 5);
+  topPerfData = rankTopPerf(candidates);
   renderTopPerformers();
 }
 function perfPrice(c) {
