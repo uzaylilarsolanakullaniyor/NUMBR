@@ -2209,9 +2209,20 @@ async function buildTopPerformers() {
 
   // Per-job timeout so one stuck quote can't hang the whole leaderboard.
   const withTimeout = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(() => res(null), ms))]);
+  // BIST is quoted in lira; convert its 1y return (and price) to USD via USD/TRY so
+  // it ranks on real dollar gains, not lira-inflation-padded numbers.
+  const fx = isTL ? await withTimeout(getStock1y("TRY=X"), 7000) : null;
+  const fxChg = fx && typeof fx.chg1y === "number" ? fx.chg1y : null;
+  const fxNow = fx && fx.price ? fx.price : usdTry;
   const results = await Promise.all(jobs.map(async (j) => {
     const d = await withTimeout(getStock1y(j.ysym), 7000);
-    return d && typeof d.chg1y === "number" ? Object.assign({}, j, { price: d.price, chg1y: d.chg1y }) : null;
+    if (!d || typeof d.chg1y !== "number") return null;
+    if (j.type === "bist") {
+      if (fxChg == null || !fxNow) return null; // need USD/TRY to express BIST in USD
+      const usdChg = ((1 + d.chg1y / 100) / (1 + fxChg / 100) - 1) * 100;
+      return Object.assign({}, j, { price: d.price / fxNow, chg1y: usdChg, ccy: "USD" });
+    }
+    return Object.assign({}, j, { price: d.price, chg1y: d.chg1y });
   }));
   if (topPerfBuiltFor !== built) return; // a newer build owns the list now
   results.forEach((r) => { if (r) candidates.push(r); });
