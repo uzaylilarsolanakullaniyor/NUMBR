@@ -1611,13 +1611,13 @@ function parseYahooChart(j) {
   // previous *daily* close (yesterday) for the 24h move — chartPreviousClose is ~1y ago on a 1y range
   const prev = valid.length >= 2 ? valid[valid.length - 2] : (meta && (meta.chartPreviousClose || meta.previousClose));
   const pct = (a, b) => (a != null && b ? (a / b - 1) * 100 : null);
-  return { price, ccy: meta ? meta.currency : null, chg24: pct(price, prev), chg1mo: valid.length > 22 ? pct(price, valid[valid.length - 22]) : null, chg1y: valid.length ? pct(price, valid[0]) : null };
+  return { price, ccy: meta ? meta.currency : null, chg24: pct(price, prev), chg1mo: valid.length > 22 ? pct(price, valid[valid.length - 22]) : null, chg1y: valid.length ? pct(price, valid[0]) : null, spark: valid.slice(-8) };
 }
 // Full quote (price + 24h/1mo/1yr %) — serverless first, public proxy fallback.
 async function fetchStockData(symbol) {
   try {
     const r = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}&range=1y`);
-    if (r.ok) { const j = await r.json(); if (typeof j.price === "number") return { price: j.price, ccy: j.currency, chg24: j.chg24, chg1mo: j.chg1mo, chg1y: j.chg1y }; }
+    if (r.ok) { const j = await r.json(); if (typeof j.price === "number") return { price: j.price, ccy: j.currency, chg24: j.chg24, chg1mo: j.chg1mo, chg1y: j.chg1y, spark: j.spark || null }; }
   } catch (e) {}
   const y = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`;
   for (const url of [`https://api.allorigins.win/raw?url=${encodeURIComponent(y)}`, `https://corsproxy.io/?url=${encodeURIComponent(y)}`]) {
@@ -1983,6 +1983,18 @@ function chgHtml(label, v) {
   if (v == null || isNaN(v)) return `<span class="perf-chip"><span class="perf-lbl">${label}</span> <b>—</b></span>`;
   return `<span class="perf-chip ${v >= 0 ? "up" : "down"}"><span class="perf-lbl">${label}</span> <b>${v >= 0 ? "+" : ""}${v.toFixed(1)}%</b></span>`;
 }
+// Tiny 7-day trend line from a price series (crypto: hourly, stocks: daily closes).
+function sparklineSvg(series) {
+  const pts = (Array.isArray(series) ? series : []).filter((p) => typeof p === "number" && isFinite(p));
+  if (pts.length < 2) return "";
+  let arr = pts;
+  if (arr.length > 32) { arr = []; const step = pts.length / 32; for (let i = 0; i < 32; i++) arr.push(pts[Math.floor(i * step)]); arr.push(pts[pts.length - 1]); }
+  const min = Math.min(...arr), max = Math.max(...arr), range = max - min || 1;
+  const W = 60, H = 22, pad = 2, n = arr.length;
+  const coords = arr.map((v, i) => `${(pad + (i / (n - 1)) * (W - 2 * pad)).toFixed(1)},${(pad + (1 - (v - min) / range) * (H - 2 * pad)).toFixed(1)}`).join(" ");
+  const up = arr[arr.length - 1] >= arr[0];
+  return `<svg class="watch-spark ${up ? "up" : "down"}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${coords}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
 // The currency a row's price is shown in (native by type), optionally flipped by
 // the per-row toggle (TR users only).
 function watchNativeCcy(w) {
@@ -2235,6 +2247,7 @@ function buildWatchlist() {
       <div class="watch-body">
         <div class="watch-top">
           <div class="watch-name">${escapeHtml(w.name)} <small>${escapeHtml((w.sym || "").toUpperCase())}</small></div>
+          ${sparklineSvg(d.spark)}
           <div class="watch-price">${watchPriceLabel(w)}</div>
         </div>
         <div class="watch-perf">
@@ -2304,10 +2317,10 @@ async function refreshWatchData() {
   if (state.watchlist.some((w) => w.type === "gold" || w.type === "goldoz")) ids.push("pax-gold");
   if (ids.length) {
     try {
-      const r = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${vs}&ids=${ids.join(",")}&price_change_percentage=24h,30d,1y`);
+      const r = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=${vs}&ids=${ids.join(",")}&price_change_percentage=24h,30d,1y&sparkline=true`);
       if (r.ok) {
         (await r.json()).forEach((c) => {
-          const d = { price: c.current_price, chg24: c.price_change_percentage_24h_in_currency, chg1mo: c.price_change_percentage_30d_in_currency, chg1y: c.price_change_percentage_1y_in_currency };
+          const d = { price: c.current_price, chg24: c.price_change_percentage_24h_in_currency, chg1mo: c.price_change_percentage_30d_in_currency, chg1y: c.price_change_percentage_1y_in_currency, spark: (c.sparkline_in_7d && c.sparkline_in_7d.price) || null };
           if (c.id === "pax-gold") {
             const g = Object.assign({}, d, { price: c.current_price / GRAMS_PER_OZ }); // per-gram in active ccy
             watchData["gold"] = g; watchData["goldoz"] = g; // ounce row derives from the same data
@@ -2473,9 +2486,9 @@ function trListHtml(bist, usdtry, eurtry) {
   const fx = (d, isTry) => d && d.price != null ? (isTry ? "₺" : "$") + fmtPrice(d.price) : "…";
   const gold = (m) => gram > 0 ? formatMoney(gram * m) : "…";
   return [
-    trRow("BIST 100", bist && bist.price != null ? fmtPrice(bist.price) : "…", bist ? bist.chg24 : null),
-    trRow("USD/TRY", fx(usdtry, true), usdtry ? usdtry.chg24 : null),
-    trRow("EUR/TRY", fx(eurtry, true), eurtry ? eurtry.chg24 : null),
+    trRow("BIST 100", bist && bist.price != null ? fmtPrice(bist.price) : "…"),
+    trRow("USD/TRY", fx(usdtry, true)),
+    trRow("EUR/TRY", fx(eurtry, true)),
     trRow(t("gold_gram"), gold(GOLD_COIN_MULT.gram)),
     trRow(t("gold_quarter"), gold(GOLD_COIN_MULT.quarter)),
     trRow(t("gold_full"), gold(GOLD_COIN_MULT.full)),

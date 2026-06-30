@@ -28,6 +28,7 @@ module.exports = async (req, res) => {
       chg24: pct(price, prev),
       chg1mo: valid.length > 22 ? pct(price, valid[valid.length - 22]) : null,
       chg1y: valid.length ? pct(price, valid[0]) : null,
+      spark: valid.slice(-8), // last ~7 daily closes for the watchlist trend line
     });
   } catch (e) {
     res.status(502).json({ error: "fetch failed" });

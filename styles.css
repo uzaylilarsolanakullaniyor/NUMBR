@@ -809,10 +809,13 @@ body {
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
 }
 .watch-row.wl-dragging .watch-grip { color: var(--accent); }
-.watch-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.watch-name { font-size: 15px; font-weight: 600; min-width: 0; }
+.watch-top { display: flex; align-items: center; gap: 10px; }
+.watch-name { flex: 1; font-size: 15px; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .watch-name small { color: var(--text-faint); font-weight: 400; font-size: 11.5px; margin-left: 5px; }
 .watch-price { font-family: "Sora", sans-serif; font-weight: 800; font-size: 16px; white-space: nowrap; }
+.watch-spark { flex: none; width: 60px; height: 22px; opacity: 0.9; }
+.watch-spark.up { color: var(--good); }
+.watch-spark.down { color: #ff6b6b; }
 .watch-perf { display: flex; align-items: center; gap: 7px; margin-top: 9px; flex-wrap: wrap; }
 .perf-chip {
   font-size: 11.5px; padding: 3px 9px; border-radius: 999px;
