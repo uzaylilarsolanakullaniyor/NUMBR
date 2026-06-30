@@ -2461,53 +2461,38 @@ async function getFxQuote(ysym) {
   if (d && d.price != null) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e) {} return d; }
   return null;
 }
+function trChgHtml(v) {
+  return typeof v === "number" ? `<span class="tr-chg ${v >= 0 ? "up" : "down"}">${v >= 0 ? "+" : ""}${v.toFixed(2)}%</span>` : "";
+}
+function trRow(name, price, chg24) {
+  return `<div class="tr-row"><span class="tr-name">${name}</span><span class="tr-vals"><span class="tr-price">${price}</span>${trChgHtml(chg24)}</span></div>`;
+}
+// One flat list (no headings): BIST 100, USD/TRY, EUR/TRY, gram / quarter / full gold.
+function trListHtml(bist, usdtry, eurtry) {
+  const gram = goldPriceGram; // TL per gram when on TL
+  const fx = (d, isTry) => d && d.price != null ? (isTry ? "₺" : "$") + fmtPrice(d.price) : "…";
+  const gold = (m) => gram > 0 ? formatMoney(gram * m) : "…";
+  return [
+    trRow("BIST 100", bist && bist.price != null ? fmtPrice(bist.price) : "…", bist ? bist.chg24 : null),
+    trRow("USD/TRY", fx(usdtry, true), usdtry ? usdtry.chg24 : null),
+    trRow("EUR/TRY", fx(eurtry, true), eurtry ? eurtry.chg24 : null),
+    trRow(t("gold_gram"), gold(GOLD_COIN_MULT.gram)),
+    trRow(t("gold_quarter"), gold(GOLD_COIN_MULT.quarter)),
+    trRow(t("gold_full"), gold(GOLD_COIN_MULT.full)),
+  ].join("");
+}
 async function buildTrPanel() {
   const sec = document.getElementById("trPanel");
   if (!sec) return;
   if (state.currency !== "TL") { sec.hidden = true; return; }
   sec.hidden = false;
-  renderTrGold(); // gold is derived from already-loaded data — render right away
-
-  const chgHtml = (v) => typeof v === "number" ? `<span class="tr-chg ${v >= 0 ? "up" : "down"}">${v >= 0 ? "+" : ""}${v.toFixed(2)}%</span>` : "";
-  const indexEl = document.getElementById("trIndexList");
-  const forexEl = document.getElementById("trForexList");
-  if (indexEl && !indexEl.children.length) indexEl.innerHTML = `<div class="tr-msg">${t("coin_loading")}</div>`;
-  if (forexEl && !forexEl.children.length) forexEl.innerHTML = `<div class="tr-msg">${t("coin_loading")}</div>`;
-  const pairs = [
-    { sym: "USD/TRY", ysym: "TRY=X", try: true },
-    { sym: "EUR/TRY", ysym: "EURTRY=X", try: true },
-    { sym: "EUR/USD", ysym: "EURUSD=X", try: false },
-  ];
-  const [bist, ...rows] = await Promise.all([
-    getFxQuote("XU100.IS"),
-    ...pairs.map((p) => getFxQuote(p.ysym).then((d) => Object.assign({}, p, { price: d ? d.price : null, chg24: d ? d.chg24 : null }))),
-  ]);
+  const listEl = document.getElementById("trList");
+  if (!listEl) return;
+  // Gold is instant; index/forex fill in once fetched (show "…" placeholders meanwhile).
+  listEl.innerHTML = trListHtml(null, null, null);
+  const [bist, usdtry, eurtry] = await Promise.all([getFxQuote("XU100.IS"), getFxQuote("TRY=X"), getFxQuote("EURTRY=X")]);
   if (state.currency !== "TL") return; // currency changed mid-fetch
-  if (indexEl) {
-    const price = bist && bist.price != null ? fmtPrice(bist.price) : "…";
-    indexEl.innerHTML = `<div class="tr-row"><span class="tr-name">BIST 100</span><span class="tr-vals"><span class="tr-price">${price}</span>${chgHtml(bist ? bist.chg24 : null)}</span></div>`;
-  }
-  if (forexEl) {
-    forexEl.innerHTML = rows.map((r) => {
-      const price = r.price == null ? "…" : (r.try ? "₺" : "$") + fmtPrice(r.price);
-      return `<div class="tr-row"><span class="tr-name">${r.sym}</span><span class="tr-vals"><span class="tr-price">${price}</span>${chgHtml(r.chg24)}</span></div>`;
-    }).join("");
-  }
-}
-function renderTrGold() {
-  const goldEl = document.getElementById("trGoldList");
-  if (!goldEl) return;
-  const gram = goldPriceGram; // TL per gram when on TL
-  const items = [
-    { key: "gold_gram", m: GOLD_COIN_MULT.gram },
-    { key: "gold_quarter", m: GOLD_COIN_MULT.quarter },
-    { key: "gold_half", m: GOLD_COIN_MULT.half },
-    { key: "gold_full", m: GOLD_COIN_MULT.full },
-  ];
-  goldEl.innerHTML = items.map((it) => {
-    const price = gram > 0 ? formatMoney(gram * it.m) : "…";
-    return `<div class="tr-row"><span class="tr-name">${t(it.key)}</span><span class="tr-vals"><span class="tr-price">${price}</span></span></div>`;
-  }).join("");
+  listEl.innerHTML = trListHtml(bist, usdtry, eurtry);
 }
 function wireWatchSearch() {
   const search = el.watchSearch, dd = el.watchDd;

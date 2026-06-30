@@ -881,13 +881,10 @@ body {
 .top-perf-chg.up { color: var(--good); }
 .top-perf-chg.down { color: #ff6b6b; }
 
-/* Turkey panel: FX rates + lira gold */
-.tr-panel { margin-top: 16px; padding: 18px 20px 16px; display: flex; flex-direction: column; gap: 18px; }
+/* Turkey panel: BIST 100 + FX rates + lira gold (one flat list, no headings) */
+.tr-panel { margin-top: 16px; padding: 6px 20px; }
 .tr-panel[hidden] { display: none; }
-.tr-group { display: flex; flex-direction: column; }
-.tr-group .settings-label { margin-bottom: 12px; }
 .tr-list { display: flex; flex-direction: column; }
-.tr-msg { color: var(--text-faint); font-size: 13px; padding: 4px 2px; }
 .tr-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 11px 2px; border-bottom: 1px solid var(--glass-border-soft);
