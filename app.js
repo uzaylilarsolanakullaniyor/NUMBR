@@ -299,9 +299,8 @@ const I18N = {
     watch_search_ph: "Search gold, stocks, crypto…", watch_empty: "Search above and tap to add assets to your watchlist.", watch_chart: "Open chart on TradingView",
     top_perf_title: "This year's top performers", asset_silver: "Silver", top_perf_loading: "Ranking the past year…",
     watch_ccy: "Show price in USD / TL", watch_chart_full: "Open full chart on TradingView ↗",
-    tr_forex: "Currencies", tr_gold: "Gold (TRY)",
+    tr_index: "Borsa Istanbul", tr_forex: "Currencies", tr_gold: "Gold (TRY)",
     gold_gram: "Gram Gold", gold_quarter: "Quarter Gold", gold_half: "Half Gold", gold_full: "Full Gold",
-    tr_gold_note: "Coin values are approximate (metal content, excluding the workmanship premium).",
     lbl_24h: "24h", lbl_1mo: "1M", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/mo from portfolio",
     net_tax: "Net (−15% tax)", coin_search_ph: "Search coin (e.g. Solana)", qty_ph: "Qty", coin_loading: "Loading live prices…", grams_ph: "Grams", oz_ph: "Ounces",
@@ -419,9 +418,8 @@ const I18N = {
     watch_search_ph: "Altın, hisse, kripto ara…", watch_empty: "Yukarıdan ara ve takip listene varlık ekle.", watch_chart: "TradingView'de grafiği aç",
     top_perf_title: "Son 1 yılın yıldızları", asset_silver: "Gümüş", top_perf_loading: "Son 1 yıl sıralanıyor…",
     watch_ccy: "Fiyatı dolar / TL göster", watch_chart_full: "TradingView'de tam grafiği aç ↗",
-    tr_forex: "Döviz", tr_gold: "Altın (TL)",
+    tr_index: "Borsa İstanbul", tr_forex: "Döviz", tr_gold: "Altın (TL)",
     gold_gram: "Gram Altın", gold_quarter: "Çeyrek Altın", gold_half: "Yarım Altın", gold_full: "Tam Altın",
-    tr_gold_note: "Sarrafiye değerleri yaklaşıktır (altın içeriği; işçilik primi hariç).",
     lbl_24h: "24s", lbl_1mo: "1A", lbl_1yr: "1Y",
     inc_from_portfolio: "+{x}/ay portföyden",
     net_tax: "Net (stopaj −%15)", coin_search_ph: "Coin ara (örn. Solana)", qty_ph: "Adet", coin_loading: "Canlı fiyatlar yükleniyor…", grams_ph: "Gram", oz_ph: "Ons",
@@ -2464,25 +2462,31 @@ async function buildTrPanel() {
   sec.hidden = false;
   renderTrGold(); // gold is derived from already-loaded data — render right away
 
+  const chgHtml = (v) => typeof v === "number" ? `<span class="tr-chg ${v >= 0 ? "up" : "down"}">${v >= 0 ? "+" : ""}${v.toFixed(2)}%</span>` : "";
+  const indexEl = document.getElementById("trIndexList");
   const forexEl = document.getElementById("trForexList");
+  if (indexEl && !indexEl.children.length) indexEl.innerHTML = `<div class="tr-msg">${t("coin_loading")}</div>`;
   if (forexEl && !forexEl.children.length) forexEl.innerHTML = `<div class="tr-msg">${t("coin_loading")}</div>`;
   const pairs = [
     { sym: "USD/TRY", ysym: "TRY=X", try: true },
     { sym: "EUR/TRY", ysym: "EURTRY=X", try: true },
-    { sym: "GBP/TRY", ysym: "GBPTRY=X", try: true },
     { sym: "EUR/USD", ysym: "EURUSD=X", try: false },
   ];
-  const rows = await Promise.all(pairs.map(async (p) => {
-    const d = await getFxQuote(p.ysym);
-    return Object.assign({}, p, { price: d ? d.price : null, chg24: d ? d.chg24 : null });
-  }));
+  const [bist, ...rows] = await Promise.all([
+    getFxQuote("XU100.IS"),
+    ...pairs.map((p) => getFxQuote(p.ysym).then((d) => Object.assign({}, p, { price: d ? d.price : null, chg24: d ? d.chg24 : null }))),
+  ]);
   if (state.currency !== "TL") return; // currency changed mid-fetch
-  if (!forexEl) return;
-  forexEl.innerHTML = rows.map((r) => {
-    const price = r.price == null ? "…" : (r.try ? "₺" : "$") + fmtPrice(r.price);
-    const chg = typeof r.chg24 === "number" ? `<span class="tr-chg ${r.chg24 >= 0 ? "up" : "down"}">${r.chg24 >= 0 ? "+" : ""}${r.chg24.toFixed(2)}%</span>` : "";
-    return `<div class="tr-row"><span class="tr-name">${r.sym}</span><span class="tr-vals"><span class="tr-price">${price}</span>${chg}</span></div>`;
-  }).join("");
+  if (indexEl) {
+    const price = bist && bist.price != null ? fmtPrice(bist.price) : "…";
+    indexEl.innerHTML = `<div class="tr-row"><span class="tr-name">BIST 100</span><span class="tr-vals"><span class="tr-price">${price}</span>${chgHtml(bist ? bist.chg24 : null)}</span></div>`;
+  }
+  if (forexEl) {
+    forexEl.innerHTML = rows.map((r) => {
+      const price = r.price == null ? "…" : (r.try ? "₺" : "$") + fmtPrice(r.price);
+      return `<div class="tr-row"><span class="tr-name">${r.sym}</span><span class="tr-vals"><span class="tr-price">${price}</span>${chgHtml(r.chg24)}</span></div>`;
+    }).join("");
+  }
 }
 function renderTrGold() {
   const goldEl = document.getElementById("trGoldList");
