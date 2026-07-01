@@ -594,6 +594,126 @@ body {
 }
 .add-cat:hover { color: #fff; border-color: rgba(124, 92, 255, 0.6); background: rgba(124, 92, 255, 0.12); }
 
+/* ---------- Aracım (car hub) ---------- */
+.car-panel { padding: 16px 24px 20px; margin-bottom: 16px; }
+.car-select {
+  width: 100%; font: inherit; color: var(--text);
+  padding: 11px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.05);
+  cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.car-select:focus { outline: none; border-color: rgba(124, 92, 255, 0.6); }
+.car-field { display: flex; flex-direction: column; gap: 6px; }
+.car-field > span { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+.car-field > span small { color: var(--text-faint); font-weight: 500; }
+.car-field--grow { flex: 1; min-width: 0; }
+.car-route-inputs { display: flex; flex-direction: column; gap: 12px; }
+.car-loc { display: flex; flex-direction: column; gap: 6px; }
+.car-loc-lbl { font-size: 12px; color: var(--text-dim); font-weight: 600; }
+.car-loc-selects { display: flex; gap: 8px; }
+.car-loc-selects .car-select { flex: 1; min-width: 0; }
+.car-select--d { flex: 0.85; }
+.car-select:disabled { opacity: 0.5; cursor: not-allowed; }
+.car-arrow { color: var(--text-faint); font-size: 20px; padding-bottom: 10px; }
+.car-calc { margin-top: 14px; }
+.car-route-msg { margin: 10px 0 0; font-size: 13px; color: var(--warn); }
+.car-results { margin-top: 16px; }
+.car-stats {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+}
+.car-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 12px 6px; border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border-soft);
+  text-align: center;
+}
+.car-stat-v { font-family: "Sora", sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
+.car-stat-l { font-size: 10.5px; color: var(--text-faint); font-weight: 600; line-height: 1.2; }
+.car-costs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.car-cost {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 12px 14px; border-radius: var(--radius-sm);
+  background: rgba(124, 92, 255, 0.1); border: 1px solid rgba(124, 92, 255, 0.28);
+}
+.car-cost-l { font-size: 11px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.car-cost-v { font-family: "Sora", sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.car-hint { margin: 10px 0 0; font-size: 13px; color: var(--warn); }
+.car-note { margin: 10px 0 0; font-size: 11px; color: var(--text-faint); line-height: 1.5; }
+.car-save-trip { margin-top: 12px; }
+.car-empty { margin: 6px 0 0; font-size: 14px; color: var(--text-faint); }
+
+/* Car profile cards */
+.car-prof {
+  padding: 14px; border-radius: var(--radius-md); margin-bottom: 10px;
+  border: 1px solid var(--glass-border-soft); background: rgba(255, 255, 255, 0.04);
+}
+.car-prof.is-active { border-color: rgba(124, 92, 255, 0.55); background: rgba(124, 92, 255, 0.08); }
+/* Unified car card: active picker + fuel specs inside a veh-card */
+.veh-card.is-active { border-color: rgba(124, 92, 255, 0.5); background: rgba(124, 92, 255, 0.06); }
+.veh-card .veh-active { flex: none; }
+.veh-card.is-active .veh-active { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2); }
+.veh-specs { margin-top: 12px; margin-bottom: 4px; }
+.car-prof-head { display: flex; align-items: center; gap: 10px; }
+.car-prof-pick {
+  flex: none; width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid var(--glass-border); background: transparent; cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.car-prof.is-active .car-prof-pick { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.2); }
+.car-prof-name {
+  flex: 1; min-width: 0; font: inherit; font-weight: 700; font-size: 16px;
+  color: var(--text); background: transparent; border: none; padding: 4px 0;
+}
+.car-prof-name:focus { outline: none; }
+.car-prof-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.car-prof-grid .car-field:first-child { grid-column: 1 / -1; }
+.car-num {
+  width: 100%; font: inherit; font-weight: 600; color: var(--text);
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.05);
+}
+.car-num:focus { outline: none; border-color: rgba(124, 92, 255, 0.6); }
+
+/* Trip history */
+.car-trip {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--glass-border-soft);
+}
+.car-trip:last-child { border-bottom: none; }
+.car-trip-main { flex: 1; min-width: 0; }
+.car-trip-route { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.car-trip-route b { font-size: 15px; font-weight: 700; }
+.car-trip-date { font-size: 12px; color: var(--text-faint); }
+.car-trip-meta { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+.car-trip-right { display: flex; align-items: center; gap: 8px; }
+.car-trip-right small { color: var(--text-faint); font-size: 11px; }
+.car-trip-cost { font-family: "Sora", sans-serif; font-weight: 800; font-size: 16px; }
+
+/* Trip expenses */
+.car-exp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.car-exp-row .car-select { flex: 1; min-width: 0; }
+.car-select--trip { flex: 1.2; }
+.car-exp-amt { flex: none; width: 110px; }
+
+/* Expense report */
+.car-rep-row, .car-rep-total {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 9px 0; font-size: 15px;
+}
+.car-rep-row { border-bottom: 1px solid var(--glass-border-soft); color: var(--text-dim); }
+.car-rep-row span:last-child { color: var(--text); font-weight: 600; }
+.car-rep-row--est span:last-child { color: var(--accent-2); }
+.car-rep-total { margin-top: 6px; font-family: "Sora", sans-serif; font-weight: 800; font-size: 17px; }
+
+@media (max-width: 480px) {
+  .car-panel { padding: 12px 16px 16px; }
+  .car-stats { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .car-stat { padding: 9px 3px; }
+  .car-stat-v { font-size: 15px; }
+  .car-stat-l { font-size: 9px; }
+  .car-exp-amt { width: 90px; }
+}
+
 .savings-result { padding: 26px; display: flex; flex-direction: column; gap: 20px; }
 .savings-total { display: flex; flex-direction: column; gap: 3px; }
 .savings-total-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); }

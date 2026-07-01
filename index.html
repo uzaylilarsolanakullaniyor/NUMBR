@@ -173,15 +173,6 @@
         <button class="add-cat" id="addExpense" type="button" data-i18n="exp_add">+ Add expense</button>
       </section>
 
-      <!-- My vehicles -->
-      <section class="glass savings-panel exp-vehicles" aria-label="My vehicles">
-        <h3 class="settings-label exp-sec-label" data-i18n="veh_title">My vehicles</h3>
-        <div id="vehList"></div>
-        <button class="add-cat" id="addVehicle" type="button" data-i18n="veh_add">+ Add vehicle</button>
-      </section>
-      <datalist id="vehSchedList"></datalist>
-      <datalist id="vehCatList"></datalist>
-
       <!-- Past months (archived totals) — collapsed behind a toggle -->
       <section class="glass savings-panel exp-history" id="expHistorySec" aria-label="Past months" hidden>
         <button class="exp-hist-toggle" id="expHistToggle" type="button" aria-expanded="false">
@@ -193,6 +184,55 @@
 
       <datalist id="expCatList"></datalist>
     </div><!-- /view-savings -->
+
+    <!-- ============ ARACIM VIEW (car hub) ============ -->
+    <div class="view" id="view-car" hidden>
+      <div class="view-intro">
+        <h2 class="view-title" data-i18n="car_title">My car</h2>
+        <p class="subtagline" data-i18n="car_sub">Plan a route, track fuel cost and trip expenses.</p>
+      </div>
+
+      <!-- Route planner -->
+      <section class="glass car-panel" aria-label="Route">
+        <h3 class="settings-label" data-i18n="car_route">Route</h3>
+        <div class="car-route-inputs">
+          <div class="car-loc">
+            <span class="car-loc-lbl" data-i18n="car_from">From</span>
+            <div class="car-loc-selects">
+              <select class="car-select" id="carFromP" aria-label="il"></select>
+              <select class="car-select car-select--d" id="carFromD" aria-label="ilçe"></select>
+            </div>
+          </div>
+          <div class="car-loc">
+            <span class="car-loc-lbl" data-i18n="car_to">To</span>
+            <div class="car-loc-selects">
+              <select class="car-select" id="carToP" aria-label="il"></select>
+              <select class="car-select car-select--d" id="carToD" aria-label="ilçe"></select>
+            </div>
+          </div>
+        </div>
+        <button class="add-cat car-calc" id="carCalc" type="button" data-i18n="car_calc">Calculate route</button>
+        <p class="car-route-msg" id="carRouteMsg" hidden></p>
+        <div class="car-results" id="carResults" hidden></div>
+        <button class="add-cat car-save-trip" id="carSaveTrip" type="button" data-i18n="car_save_trip" hidden>Save trip</button>
+      </section>
+
+      <!-- My car(s): brand-model + fuel specs (used for route cost) + payment reminders
+           + logged costs. Costs still count toward monthly expenses (Gider). -->
+      <section class="glass car-panel exp-vehicles" aria-label="My car">
+        <h3 class="settings-label exp-sec-label" data-i18n="veh_title">My car</h3>
+        <div id="vehList"></div>
+        <button class="add-cat" id="addVehicle" type="button" data-i18n="veh_add">+ Add car</button>
+      </section>
+      <datalist id="vehSchedList"></datalist>
+      <datalist id="vehCatList"></datalist>
+
+      <!-- Trip history (with running total) -->
+      <section class="glass car-panel" aria-label="Trip history">
+        <h3 class="settings-label" data-i18n="car_history">Trip history</h3>
+        <div id="carHistList"></div>
+      </section>
+    </div><!-- /view-car -->
 
     <!-- ============ SETTINGS VIEW ============ -->
     <div class="view" id="view-settings" hidden>
@@ -371,6 +411,10 @@
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
       <span data-i18n="nav_savings">Expenses</span>
     </button>
+    <button class="tab" type="button" data-view="car">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+      <span data-i18n="nav_car">My car</span>
+    </button>
     <button class="tab" type="button" data-view="home">
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
       <span data-i18n="nav_home">Freedom</span>
@@ -439,6 +483,7 @@
         <div class="guide-item"><span class="guide-ico">💼</span><div class="guide-txt"><b data-i18n="nav_portfolio">Portfolio</b><p data-i18n="guide_portfolio">—</p></div></div>
         <div class="guide-item"><span class="guide-ico">👛</span><div class="guide-txt"><b data-i18n="nav_income">Income</b><p data-i18n="guide_income">—</p></div></div>
         <div class="guide-item"><span class="guide-ico">🧾</span><div class="guide-txt"><b data-i18n="nav_savings">Expenses</b><p data-i18n="guide_expenses">—</p></div></div>
+        <div class="guide-item"><span class="guide-ico">🚗</span><div class="guide-txt"><b data-i18n="nav_car">My car</b><p data-i18n="guide_car">—</p></div></div>
         <div class="guide-item"><span class="guide-ico">🎯</span><div class="guide-txt"><b data-i18n="nav_home">Freedom</b><p data-i18n="guide_freedom">—</p></div></div>
         <div class="guide-item"><span class="guide-ico">⭐</span><div class="guide-txt"><b data-i18n="nav_watchlist">Watch</b><p data-i18n="guide_watch">—</p></div></div>
       </div>
