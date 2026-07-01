@@ -290,6 +290,7 @@ const I18N = {
     nav_portfolio: "Portfolio",
     portfolio_title: "Your portfolio", portfolio_sub: "Add what you own and see your allocation.",
     holding_ph: "Holding name", add_holding: "+ Add holding", total_value: "Total portfolio value",
+    nw_title: "Net worth history", nw_since: "since start", nw_building: "Building history — your net worth will chart here as you keep opening the app.",
     flow_title: "Monthly cash flow", flow_income: "Income", flow_expenses: "Expenses", flow_net: "Net / month", flow_last_month: "Last month: {x}",
     flow_savings_note: "+{x}/month more if you cut your tracked spending.",
     cat_cash: "Cash", cat_investment: "Investment",
@@ -409,6 +410,7 @@ const I18N = {
     nav_portfolio: "Portföy",
     portfolio_title: "Portföyün", portfolio_sub: "Sahip olduklarını ekle, dağılımını gör.",
     holding_ph: "Varlık adı", add_holding: "+ Varlık ekle", total_value: "Toplam portföy değeri",
+    nw_title: "Net değer geçmişi", nw_since: "başlangıçtan beri", nw_building: "Geçmiş oluşuyor — uygulamayı açtıkça net değerin buraya çizilecek.",
     flow_title: "Aylık nakit akışı", flow_income: "Gelir", flow_expenses: "Gider", flow_net: "Aylık net", flow_last_month: "Geçen ay: {x}",
     flow_savings_note: "Takip ettiğin harcamaları kısarsan ayda +{x} daha.",
     cat_cash: "Nakit", cat_investment: "Yatırım",
@@ -488,6 +490,7 @@ const state = {
     target: { USD: [SAVINGS_DEFAULT_INVEST.USD], TL: [SAVINGS_DEFAULT_INVEST.TL] },
   },
   portTotalUSD: false, // when currency is TL, show the total portfolio value in USD instead
+  netWorth: [], // daily portfolio-total snapshots: [{ d: "YYYY-MM-DD", v: total, c: currency }]
   watchlist: [], // [{ type, key, name }] — assets to monitor (price + 24h/1mo/1yr performance)
   income: { amounts: {}, passive: {}, custom: [], seq: 0 },
 };
@@ -1771,6 +1774,52 @@ function renderPort24h(totalNative) {
   el.port24h.innerHTML = `${sign}${Math.abs(pct).toFixed(1)}% <span class="port-24h-amt">${sign}${moneyTxt}</span> <span class="port-24h-lbl">${t("lbl_24h")}</span>`;
 }
 
+// ---- Net worth history: one snapshot of the portfolio total per day ----
+function nwTodayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function recordNetWorth(total) {
+  if (!(total > 0)) return; // skip empty portfolios / pre-load zeros
+  const day = nwTodayStr(), hist = state.netWorth;
+  const last = hist[hist.length - 1];
+  if (last && last.d === day) { last.v = total; last.c = state.currency; }
+  else hist.push({ d: day, v: total, c: state.currency });
+  if (hist.length > 400) hist.splice(0, hist.length - 400); // cap ~13 months
+}
+// Convert a stored point into the currently displayed currency.
+function nwValue(pt) {
+  if (pt.c === state.currency) return pt.v;
+  if (!usdTry) return null;
+  return pt.c === "TL" ? pt.v / usdTry : pt.v * usdTry;
+}
+function renderNetWorth() {
+  const card = document.getElementById("nwCard");
+  if (!card) return;
+  const pts = (state.netWorth || []).map((p) => ({ d: p.d, v: nwValue(p) })).filter((p) => typeof p.v === "number" && isFinite(p.v));
+  const chartEl = document.getElementById("nwChart"), metaEl = document.getElementById("nwMeta");
+  if (!pts.length) { card.hidden = true; return; }
+  card.hidden = false;
+  if (pts.length < 2) { // one day so far — encourage coming back
+    chartEl.innerHTML = "";
+    metaEl.className = "nw-meta nw-building";
+    metaEl.textContent = t("nw_building");
+    return;
+  }
+  const vals = pts.map((p) => p.v);
+  const min = Math.min(...vals), max = Math.max(...vals), range = max - min || 1;
+  const W = 300, H = 96, pad = 8, n = pts.length;
+  const X = (i) => pad + (i / (n - 1)) * (W - 2 * pad);
+  const Y = (v) => pad + (1 - (v - min) / range) * (H - 2 * pad);
+  const line = pts.map((p, i) => `${X(i).toFixed(1)},${Y(p.v).toFixed(1)}`).join(" ");
+  const area = `${pad},${H - pad} ${line} ${(W - pad).toFixed(1)},${H - pad}`;
+  const up = vals[n - 1] >= vals[0];
+  chartEl.innerHTML = `<svg class="nw-svg ${up ? "up" : "down"}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polygon class="nw-area" points="${area}"/><polyline class="nw-line" points="${line}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const diff = vals[n - 1] - vals[0], pct = vals[0] ? (diff / vals[0]) * 100 : 0, sign = diff >= 0 ? "+" : "−";
+  metaEl.className = "nw-meta " + (up ? "is-pos" : "is-neg");
+  metaEl.innerHTML = `<span class="nw-change">${sign}${formatMoney(Math.abs(diff))} · ${sign}${Math.abs(pct).toFixed(1)}%</span> <span class="nw-since">${t("nw_since")}</span>`;
+}
+
 function refreshPortfolio() {
   saveState();
   const meta = CURRENCY_META[state.currency];
@@ -1797,6 +1846,8 @@ function refreshPortfolio() {
   const total = state.portfolio.holdings.reduce((sum, h) => sum + (h.value || 0), 0);
   renderPortTotal(total);
   renderPort24h(total);
+  recordNetWorth(total);
+  renderNetWorth();
 
   const segs = state.portfolio.holdings.filter((h) => h.value > 0);
   if (!segs.length) {
@@ -2727,7 +2778,7 @@ function saveState() {
       inflation: state.inflation, rates: state.rates, realEstate: state.realEstate,
       expenses: state.expenses, vehicles: state.vehicles, vehSeq: state.vehSeq,
       income: state.income, portfolio: state.portfolio, watchlist: state.watchlist,
-      portTotalUSD: state.portTotalUSD,
+      portTotalUSD: state.portTotalUSD, netWorth: state.netWorth,
     }));
   } catch (e) {}
 }
@@ -2761,6 +2812,7 @@ function loadState() {
   if (s.income) state.income = s.income;
   if (s.portfolio) state.portfolio = s.portfolio;
   if (Array.isArray(s.watchlist)) state.watchlist = s.watchlist;
+  if (Array.isArray(s.netWorth)) state.netWorth = s.netWorth;
   if (typeof s.portTotalUSD === "boolean") state.portTotalUSD = s.portTotalUSD;
   // normalize any legacy/removed asset types from older saves
   if (state.portfolio && Array.isArray(state.portfolio.holdings)) {

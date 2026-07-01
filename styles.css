@@ -1565,6 +1565,23 @@ body {
 .guide-txt p { margin: 0; font-size: 13px; color: var(--text-dim); line-height: 1.45; }
 
 /* ============ Portfolio total + currency toggle ============ */
+/* Net worth history card */
+.nw-card { padding: 18px 20px; }
+.nw-card[hidden] { display: none; }
+.nw-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.nw-head .settings-label { margin: 0; }
+.nw-meta { display: inline-flex; align-items: baseline; gap: 8px; font-size: 13.5px; font-weight: 700; }
+.nw-meta.is-pos .nw-change { color: var(--good); }
+.nw-meta.is-neg .nw-change { color: #ff6b6b; }
+.nw-since { font-size: 11px; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.04em; }
+.nw-meta.nw-building { font-size: 12.5px; font-weight: 500; color: var(--text-faint); text-transform: none; letter-spacing: 0; line-height: 1.5; flex-basis: 100%; }
+.nw-chart { margin-top: 14px; }
+.nw-svg { display: block; width: 100%; height: 96px; }
+.nw-svg.up { color: var(--good); }
+.nw-svg.down { color: #ff6b6b; }
+.nw-area { fill: currentColor; opacity: 0.13; stroke: none; }
+.nw-line { opacity: 0.95; }
+
 .port-total-card { padding: 20px 22px; }
 .port-total-head { display: flex; align-items: center; gap: 10px; }
 .port-ccy-toggle {
